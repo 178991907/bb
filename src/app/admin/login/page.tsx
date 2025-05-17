@@ -8,11 +8,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal } from 'lucide-react';
+import { LogIn } from 'lucide-react'; // Changed Terminal to LogIn for better semantics
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
@@ -20,11 +20,11 @@ export default function AdminLoginPage() {
     event.preventDefault();
     setError('');
     // MOCK LOGIN: In a real app, you would validate credentials against a backend.
-    if (email === 'admin@example.com' && password === 'password') {
+    if (username === 'admin' && password === 'admin') {
       localStorage.setItem('isAdminAuthenticated', 'true');
       router.push('/admin/dashboard');
     } else {
-      setError('Invalid email or password. Try admin@example.com and password.');
+      setError('Invalid username or password. Try admin/admin.');
     }
   };
 
@@ -40,13 +40,13 @@ export default function AdminLoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="admin@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username"
+                type="text"
+                placeholder="admin"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 className="h-10"
               />
@@ -56,7 +56,7 @@ export default function AdminLoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="password"
+                placeholder="admin"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -65,7 +65,7 @@ export default function AdminLoginPage() {
             </div>
             {error && (
               <Alert variant="destructive">
-                <Terminal className="h-4 w-4" />
+                <LogIn className="h-4 w-4" /> 
                 <AlertTitle>Login Failed</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
@@ -76,7 +76,7 @@ export default function AdminLoginPage() {
           </form>
         </CardContent>
         <CardFooter className="text-center text-sm text-muted-foreground">
-          <p>This is a mock login for demonstration purposes.</p>
+          <p>Default credentials: admin / admin</p>
         </CardFooter>
       </Card>
     </div>
