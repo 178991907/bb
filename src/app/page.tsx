@@ -86,10 +86,10 @@ export default function DashboardPage() {
           <LogoDisplay logoUrl={siteSettings.logoUrl} siteName={siteSettings.siteName} />
         </div>
 
-        <p className="text-lg sm:text-xl lg:text-2xl font-bold mb-3 bg-clip-text text-transparent animated-text-gradient-en">
+        <p className="text-xl sm:text-2xl lg:text-3xl font-bold mb-3 bg-clip-text text-transparent animated-text-gradient-en">
           {siteSettings.welcomeMessageEn}
         </p>
-        <p className="text-base sm:text-lg font-semibold mb-12 bg-clip-text text-transparent animated-text-gradient-zh">
+        <p className="text-lg sm:text-xl lg:text-2xl font-semibold mb-12 bg-clip-text text-transparent animated-text-gradient-zh">
           {siteSettings.welcomeMessageZh}
         </p>
 
