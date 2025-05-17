@@ -13,7 +13,7 @@ import type { LinkItem } from '@/app/admin/links/new/page';
 // These values correspond to the defaults in src/app/admin/settings/page.tsx
 const siteSettings = {
   siteName: '英语全科启蒙', // This is used if logo fallback text is needed
-  logoUrl: '', // Set to empty to use the KeTErin logo from LogoDisplay fallback
+  logoUrl: 'https://pic1.imgdb.cn/item/6817c79a58cb8da5c8dc723f.png', // Updated to use image logo
   welcomeMessageEn: 'Welcome to All-Subject English Enlightenment',
   welcomeMessageZh: '系统 (平台) 由 Erin 英语全科启蒙团队独立开发完成',
   footerText: '© 2025 All-Subject English Enlightenment. All rights reserved. 由 Terry 开发和维护',
@@ -24,15 +24,15 @@ const LOCAL_STORAGE_LINKS_KEY = 'linkHubLinks';
 
 // Initial mock data (will be overridden by localStorage if available)
 const initialMockCategories: Category[] = [
-  { id: '1', name: '常用工具', slug: 'common-tools', createdDate: 'May 16, 2025', icon: 'tool' },
-  { id: '2', name: '儿童游戏', slug: 'kids-games', createdDate: 'May 16, 2025', icon: 'gamepad-2' },
+  { id: '1', name: '常用工具', slug: 'common-tools', createdDate: 'May 16, 2024', icon: 'tool' },
+  { id: '2', name: '儿童游戏', slug: 'kids-games', createdDate: 'May 16, 2024', icon: 'gamepad-2' },
 ];
 
 const initialMockLinks: LinkItem[] = [
-  { id: 'L1', title: '搜索 (Baidu)', url: 'https://www.baidu.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2025', imageUrl: 'https://placehold.co/120x80.png', aiHint: 'search baidu', description: 'Leading Chinese Search Engine' },
-  { id: 'L3', title: 'guge (Google)', url: 'https://www.google.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2025', imageUrl: 'https://placehold.co/120x80.png', aiHint: 'search google', description: 'Global Search Engine' },
-  { id: 'g1', title: '字母游戏', url: '#game-alphabet', categoryId: '2', categoryName: '儿童游戏', createdDate: 'May 17, 2025', imageUrl: 'https://placehold.co/100x100.png', aiHint: 'alphabet game', description: '学习英文字母' },
-  { id: 'L4', title: '谷歌', url: 'https://www.google.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2025', imageUrl: '', aiHint: 'search example', description: '1111' },
+  { id: 'L1', title: '搜索 (Baidu)', url: 'https://www.baidu.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2024', imageUrl: 'https://placehold.co/120x80.png', aiHint: 'search baidu', description: 'Leading Chinese Search Engine' },
+  { id: 'L3', title: 'guge (Google)', url: 'https://www.google.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2024', imageUrl: 'https://placehold.co/120x80.png', aiHint: 'search google', description: 'Global Search Engine' },
+  { id: 'g1', title: '字母游戏', url: '#game-alphabet', categoryId: '2', categoryName: '儿童游戏', createdDate: 'May 17, 2024', imageUrl: 'https://placehold.co/100x100.png', aiHint: 'alphabet game', description: '学习英文字母' },
+  { id: 'L4', title: '谷歌', url: 'https://www.google.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2024', imageUrl: '', aiHint: 'search example', description: '1111' },
 ];
 
 
@@ -86,10 +86,10 @@ export default function DashboardPage() {
           <LogoDisplay logoUrl={siteSettings.logoUrl} siteName={siteSettings.siteName} />
         </div>
 
-        <p className="text-4xl sm:text-5xl font-bold mb-3 bg-clip-text text-transparent animated-text-gradient-en">
+        <p className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 bg-clip-text text-transparent animated-text-gradient-en">
           {siteSettings.welcomeMessageEn}
         </p>
-        <p className="text-2xl sm:text-3xl font-semibold mb-12 bg-clip-text text-transparent animated-text-gradient-zh">
+        <p className="text-xl sm:text-2xl font-semibold mb-12 bg-clip-text text-transparent animated-text-gradient-zh">
           {siteSettings.welcomeMessageZh}
         </p>
 
