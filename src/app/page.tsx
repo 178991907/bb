@@ -86,10 +86,10 @@ export default function DashboardPage() {
           <LogoDisplay logoUrl={siteSettings.logoUrl} siteName={siteSettings.siteName} />
         </div>
 
-        <p className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 bg-clip-text text-transparent animated-text-gradient-en">
+        <p className="text-lg sm:text-xl lg:text-2xl font-bold mb-3 bg-clip-text text-transparent animated-text-gradient-en">
           {siteSettings.welcomeMessageEn}
         </p>
-        <p className="text-xl sm:text-2xl font-semibold mb-12 bg-clip-text text-transparent animated-text-gradient-zh">
+        <p className="text-base sm:text-lg font-semibold mb-12 bg-clip-text text-transparent animated-text-gradient-zh">
           {siteSettings.welcomeMessageZh}
         </p>
 
@@ -108,7 +108,7 @@ export default function DashboardPage() {
 
         {categories.map(category => {
           const itemsForCategory = filteredLinks.filter(item => item.categoryId === category.id);
-          if (itemsForCategory.length === 0 && searchTerm) return null; 
+          if (itemsForCategory.length === 0 && searchTerm) return null;
 
           return (
             <section key={category.id} className="mb-16">
@@ -121,7 +121,7 @@ export default function DashboardPage() {
                       title: item.title,
                       description: item.description,
                       link: item.url,
-                      imageUrl: item.imageUrl || '', 
+                      imageUrl: item.imageUrl || '',
                       aiHint: item.aiHint || 'icon',
                     };
                     return <ToolCard key={item.id} tool={toolItem} />;

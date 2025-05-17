@@ -10,16 +10,17 @@ export function LogoDisplay({ logoUrl, siteName = "Site Logo" }: LogoDisplayProp
   if (logoUrl) {
     return (
       <div className="flex flex-col items-center justify-center select-none">
-        <Image 
-          src={logoUrl} 
-          alt={siteName} 
-          width={100} // Adjust width as needed, or make it responsive
-          height={100} // Adjust height as needed
+        <Image
+          src={logoUrl}
+          alt={siteName}
+          width={600} // Updated width
+          height={200} // Updated height
           className="rounded-md object-contain mb-2"
           data-ai-hint="logo company"
+          priority // Adding priority as it's likely LCP
         />
          {/* Optionally display site name below image if needed
-        <p className="text-xl font-semibold text-foreground">{siteName}</p> 
+        <p className="text-xl font-semibold text-foreground">{siteName}</p>
         */}
       </div>
     );
