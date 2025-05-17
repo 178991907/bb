@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/table';
 
 // Mock data for categories - in a real app, this would come from a database
-const mockCategories = [
+export const mockCategories = [
   { id: '1', name: '常用工具', slug: 'common-tools', createdDate: 'May 16, 2025' },
   { id: '2', name: '儿童游戏', slug: 'kids-games', createdDate: 'May 16, 2025' },
   // Add more mock categories as needed

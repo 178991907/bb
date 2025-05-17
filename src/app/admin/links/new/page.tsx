@@ -10,13 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
-
-// Mock categories for the dropdown - in a real app, fetch these
-const mockCategories = [
-  { id: 'cat1', name: '常用工具' },
-  { id: 'cat2', name: '学习资源' },
-  { id: 'cat3', name: '技术博客' },
-];
+import { mockCategories } from '@/app/admin/categories/page'; // Import mockCategories
 
 export default function CreateLinkPage() {
   const router = useRouter();
