@@ -1,4 +1,5 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/shadow-illumination.ts';
+// Removed import for '@/ai/flows/shadow-illumination.ts';
+// Add imports for new flows here if any are created.

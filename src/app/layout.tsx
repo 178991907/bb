@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ClarityBoost',
-  description: 'Enhance your images by illuminating shadows with AI.',
+  title: 'All-Subject English Enlightenment',
+  description: 'Welcome to All-Subject English Enlightenment Platform.',
 };
 
 export default function RootLayout({
