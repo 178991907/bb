@@ -23,8 +23,9 @@ export interface LinkItem {
   categoryId: string;
   categoryName?: string; // Optional, can be derived
   createdDate: string;
-  imageUrl?: string; // For frontend display
-  aiHint?: string; // For frontend display
+  imageUrl?: string; // For frontend display ToolCard image
+  aiHint?: string; // For frontend display ToolCard image hint
+  faviconUrl?: string; // For link's favicon
 }
 
 
@@ -33,6 +34,7 @@ export default function CreateLinkPage() {
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
   const [description, setDescription] = useState('');
+  const [faviconUrl, setFaviconUrl] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -43,7 +45,6 @@ export default function CreateLinkPage() {
     if (storedCategories) {
       setAvailableCategories(JSON.parse(storedCategories));
     } else {
-      // Fallback or prompt to create categories first
       setError('No categories available. Please create a category first.');
     }
   }, []);
@@ -66,6 +67,16 @@ export default function CreateLinkPage() {
       setIsLoading(false);
       return;
     }
+    if (faviconUrl) {
+        try {
+            new URL(faviconUrl);
+        } catch (_) {
+            setError('Please enter a valid Favicon URL or leave it empty.');
+            setIsLoading(false);
+            return;
+        }
+    }
+
 
     const selectedCategory = availableCategories.find(cat => cat.id === categoryId);
 
@@ -74,11 +85,11 @@ export default function CreateLinkPage() {
       title,
       url,
       description,
+      faviconUrl,
       categoryId,
       categoryName: selectedCategory?.name || 'Unknown Category',
       createdDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-      // For new links, imageUrl and aiHint can be empty or have defaults
-      imageUrl: `https://placehold.co/120x80.png`, // Default placeholder
+      imageUrl: `https://placehold.co/120x80.png`, // Default placeholder for ToolCard
       aiHint: title.toLowerCase().split(' ').slice(0,2).join(' ') || 'link icon',
     };
 
@@ -123,7 +134,7 @@ export default function CreateLinkPage() {
               <Input
                 id="title"
                 type="text"
-                placeholder="e.g. My Favorite Search Engine"
+                placeholder="e.g. Google"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
@@ -135,7 +146,7 @@ export default function CreateLinkPage() {
               <Input
                 id="url"
                 type="url"
-                placeholder="https://example.com"
+                placeholder="e.g. https://google.com"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 required
@@ -146,11 +157,27 @@ export default function CreateLinkPage() {
               <Label htmlFor="description">Description (optional)</Label>
               <Textarea
                 id="description"
-                placeholder="A short description of the link."
+                placeholder="e.g. Search engine"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="min-h-[100px]"
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="faviconUrl">Favicon URL (optional)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="faviconUrl"
+                  type="url"
+                  placeholder="e.g. https://google.com/favicon.ico"
+                  value={faviconUrl}
+                  onChange={(e) => setFaviconUrl(e.target.value)}
+                  className="h-10 flex-grow"
+                />
+                <Button type="button" variant="outline" onClick={() => alert('Auto-detect not implemented yet.')}>
+                  Auto-detect
+                </Button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>

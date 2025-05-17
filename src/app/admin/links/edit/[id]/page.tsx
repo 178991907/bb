@@ -24,6 +24,7 @@ export default function EditLinkPage() {
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
   const [description, setDescription] = useState('');
+  const [faviconUrl, setFaviconUrl] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [aiHint, setAiHint] = useState('');
@@ -51,6 +52,7 @@ export default function EditLinkPage() {
         setTitle(linkToEdit.title);
         setUrl(linkToEdit.url);
         setDescription(linkToEdit.description || '');
+        setFaviconUrl(linkToEdit.faviconUrl || '');
         setCategoryId(linkToEdit.categoryId);
         setImageUrl(linkToEdit.imageUrl || `https://placehold.co/120x80.png`);
         setAiHint(linkToEdit.aiHint || '');
@@ -81,6 +83,15 @@ export default function EditLinkPage() {
       setIsLoading(false);
       return;
     }
+     if (faviconUrl) {
+        try {
+            new URL(faviconUrl);
+        } catch (_) {
+            setError('Please enter a valid Favicon URL or leave it empty.');
+            setIsLoading(false);
+            return;
+        }
+    }
     
     const linkToUpdateIndex = allLinks.findIndex(link => link.id === linkId);
     if (linkToUpdateIndex === -1) {
@@ -96,6 +107,7 @@ export default function EditLinkPage() {
       title,
       url,
       description,
+      faviconUrl,
       categoryId,
       categoryName: selectedCategory?.name || 'Unknown Category',
       imageUrl: imageUrl || `https://placehold.co/120x80.png`,
@@ -154,7 +166,7 @@ export default function EditLinkPage() {
               <Input
                 id="title"
                 type="text"
-                placeholder="e.g. My Favorite Search Engine"
+                placeholder="e.g. Google"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
@@ -166,7 +178,7 @@ export default function EditLinkPage() {
               <Input
                 id="url"
                 type="url"
-                placeholder="https://example.com"
+                placeholder="e.g. https://google.com"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 required
@@ -177,14 +189,30 @@ export default function EditLinkPage() {
               <Label htmlFor="description">Description (optional)</Label>
               <Textarea
                 id="description"
-                placeholder="A short description of the link."
+                placeholder="e.g. Search engine"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="min-h-[100px]"
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="faviconUrl">Favicon URL (optional)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="faviconUrl"
+                  type="url"
+                  placeholder="e.g. https://google.com/favicon.ico"
+                  value={faviconUrl}
+                  onChange={(e) => setFaviconUrl(e.target.value)}
+                  className="h-10 flex-grow"
+                />
+                <Button type="button" variant="outline" onClick={() => alert('Auto-detect not implemented yet.')}>
+                  Auto-detect
+                </Button>
+              </div>
+            </div>
              <div className="space-y-2">
-              <Label htmlFor="imageUrl">Image URL (optional)</Label>
+              <Label htmlFor="imageUrl">Display Image URL (optional)</Label>
               <Input
                 id="imageUrl"
                 type="url"
@@ -194,11 +222,11 @@ export default function EditLinkPage() {
                 className="h-10"
               />
               <p className="text-xs text-muted-foreground">
-                URL for the link&apos;s display image. Defaults to a placeholder.
+                URL for the link&apos;s display image on the ToolCard. Defaults to a placeholder.
               </p>
             </div>
              <div className="space-y-2">
-              <Label htmlFor="aiHint">AI Hint for Image (optional)</Label>
+              <Label htmlFor="aiHint">AI Hint for Display Image (optional)</Label>
               <Input
                 id="aiHint"
                 type="text"
@@ -208,7 +236,7 @@ export default function EditLinkPage() {
                 className="h-10"
               />
                <p className="text-xs text-muted-foreground">
-                Keywords for image search (max 2 words).
+                Keywords for display image search (max 2 words).
               </p>
             </div>
             <div className="space-y-2">
