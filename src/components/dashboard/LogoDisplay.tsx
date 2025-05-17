@@ -1,6 +1,31 @@
 import React from 'react';
+import Image from 'next/image';
 
-export function LogoDisplay() {
+interface LogoDisplayProps {
+  logoUrl?: string;
+  siteName?: string;
+}
+
+export function LogoDisplay({ logoUrl, siteName = "Site Logo" }: LogoDisplayProps) {
+  if (logoUrl) {
+    return (
+      <div className="flex flex-col items-center justify-center select-none">
+        <Image 
+          src={logoUrl} 
+          alt={siteName} 
+          width={100} // Adjust width as needed, or make it responsive
+          height={100} // Adjust height as needed
+          className="rounded-md object-contain mb-2"
+          data-ai-hint="logo company"
+        />
+         {/* Optionally display site name below image if needed
+        <p className="text-xl font-semibold text-foreground">{siteName}</p> 
+        */}
+      </div>
+    );
+  }
+
+  // Fallback to the original styled logo if no logoUrl is provided
   return (
     <div className="flex flex-col items-center justify-center select-none">
       <div className="flex items-center space-x-1 mb-1">

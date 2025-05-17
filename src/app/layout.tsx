@@ -14,9 +14,13 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+// Values from default admin settings
+const defaultSiteName = '英语全科启蒙';
+const defaultSiteDescription = 'Your one-stop platform for English learning resources and fun games.';
+
 export const metadata: Metadata = {
-  title: 'All-Subject English Enlightenment',
-  description: 'Welcome to All-Subject English Enlightenment Platform.',
+  title: defaultSiteName,
+  description: defaultSiteDescription,
 };
 
 export default function RootLayout({

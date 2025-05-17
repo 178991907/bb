@@ -15,7 +15,7 @@ export default function AdminSettingsPage() {
 
   // Form state - initialize with example data or fetch from backend
   const [siteName, setSiteName] = useState('英语全科启蒙');
-  const [siteDescription, setSiteDescription] = useState('e.g. A collection of useful links');
+  const [siteDescription, setSiteDescription] = useState('Your one-stop platform for English learning resources and fun games.');
   const [logoUrl, setLogoUrl] = useState('https://pic1.imgdb.cn/item/6817c79a58cb8da5c8dc723f.png');
   const [welcomeMessageEn, setWelcomeMessageEn] = useState('Welcome to All-Subject English Enlightenment');
   const [welcomeMessageZh, setWelcomeMessageZh] = useState('系统 (平台) 由 Erin 英语全科启蒙团队独立开发完成');
@@ -42,7 +42,7 @@ export default function AdminSettingsPage() {
     toast({
       title: "Settings Saved",
       description: "Your changes have been saved successfully (mock).",
-      variant: "default", // Or use a success variant if you define one
+      variant: "default", 
     });
   };
 

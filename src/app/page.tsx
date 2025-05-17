@@ -1,11 +1,20 @@
-import Image from 'next/image';
+
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, ExternalLink, Sun, LogOut } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { LogoDisplay } from '@/components/dashboard/LogoDisplay';
 import { HeaderNav } from '@/components/dashboard/HeaderNav';
 import { ToolCard, type Tool } from '@/components/dashboard/ToolCard';
+
+// These values correspond to the defaults in src/app/admin/settings/page.tsx
+// In a real app, these would be fetched from a backend/CMS
+const siteSettings = {
+  siteName: '英语全科启蒙',
+  logoUrl: 'https://pic1.imgdb.cn/item/6817c79a58cb8da5c8dc723f.png',
+  welcomeMessageEn: 'Welcome to All-Subject English Enlightenment',
+  welcomeMessageZh: '系统 (平台) 由 Erin 英语全科启蒙团队独立开发完成',
+  footerText: '© 2025 All-Subject English Enlightenment. All rights reserved. 由 Terry 开发和维护',
+};
 
 const tools: Tool[] = [
   { id: '1', title: 'baidu', description: '搜索引擎', link: '#', imageUrl: 'https://placehold.co/100x100.png', aiHint: 'search engine' },
@@ -33,16 +42,16 @@ export default function DashboardPage() {
       
       <main className="flex-grow container mx-auto px-4 py-12 sm:py-16 md:py-20 text-center">
         <div className="mb-8">
-          <LogoDisplay />
+          <LogoDisplay logoUrl={siteSettings.logoUrl} siteName={siteSettings.siteName} />
         </div>
 
-        <h1 className="text-5xl font-bold text-foreground mb-3">Hello</h1>
-        <p className="text-2xl text-green-600 font-semibold mb-1">
-          Welcome to All-Subject English Enlightenment
+        <h1 className="text-5xl font-bold text-foreground mb-3">
+          {siteSettings.welcomeMessageEn}
+        </h1>
+        <p className="text-2xl text-green-600 font-semibold mb-10">
+          {siteSettings.welcomeMessageZh}
         </p>
-        <p className="text-muted-foreground mb-10">
-          系统 (平台) 由 Erin 英语全科启蒙团队独立开发完成
-        </p>
+        
 
         <div className="max-w-xl mx-auto mb-16">
           <div className="relative">
@@ -76,7 +85,7 @@ export default function DashboardPage() {
 
       <footer className="py-6 text-center text-sm text-muted-foreground border-t">
         <p>
-          © {new Date().getFullYear()} All-Subject English Enlightenment. All rights reserved. 由 Terry 开发和维护
+          {siteSettings.footerText}
         </p>
       </footer>
     </div>
