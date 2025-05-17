@@ -11,7 +11,6 @@ import type { Category } from '@/app/admin/categories/page';
 import type { LinkItem } from '@/app/admin/links/new/page';
 
 // These values correspond to the defaults in src/app/admin/settings/page.tsx
-// For the logo, we'll use an empty string to trigger the fallback in LogoDisplay to match the image.
 const siteSettings = {
   siteName: '英语全科启蒙', // This is used if logo fallback text is needed
   logoUrl: '', // Set to empty to use the KeTErin logo from LogoDisplay fallback
@@ -83,7 +82,7 @@ export default function DashboardPage() {
       <HeaderNav />
 
       <main className="flex-grow container mx-auto px-4 py-12 sm:py-16 md:py-20 text-center">
-        <div className="mb-12"> {/* Increased margin bottom for logo */}
+        <div className="mb-12">
           <LogoDisplay logoUrl={siteSettings.logoUrl} siteName={siteSettings.siteName} />
         </div>
 
@@ -115,7 +114,7 @@ export default function DashboardPage() {
             <section key={category.id} className="mb-16">
               <h2 className="text-3xl font-semibold text-primary mb-8">{category.name}</h2>
               {itemsForCategory.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {itemsForCategory.map((item) => {
                     const toolItem: Tool = {
                       id: item.id,
