@@ -1,13 +1,44 @@
 
+'use client';
+
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Folder, Link2, Plus, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import type { Category } from '@/app/admin/categories/page';
+import type { LinkItem } from '@/app/admin/links/new/page';
+
+const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
+const LOCAL_STORAGE_LINKS_KEY = 'linkHubLinks';
 
 export default function AdminDashboardPage() {
-  // Placeholder data - in a real app, this would come from a database.
-  const totalCategories = 2;
-  const totalLinks = 8;
+  const [totalCategories, setTotalCategories] = useState(0);
+  const [totalLinks, setTotalLinks] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
+    if (storedCategories) {
+      const parsedCategories: Category[] = JSON.parse(storedCategories);
+      setTotalCategories(parsedCategories.length);
+    }
+
+    const storedLinks = localStorage.getItem(LOCAL_STORAGE_LINKS_KEY);
+    if (storedLinks) {
+      const parsedLinks: LinkItem[] = JSON.parse(storedLinks);
+      setTotalLinks(parsedLinks.length);
+    }
+    setIsLoading(false);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p>Loading dashboard data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -52,12 +83,12 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent className="space-y-2">
             <Button variant="default" className="w-full" asChild>
-              <Link href="/admin/categories/new"> {/* Placeholder link */}
+              <Link href="/admin/categories/new">
                 <Plus className="mr-2 h-4 w-4" /> Add New Category
               </Link>
             </Button>
             <Button variant="default" className="w-full" asChild>
-              <Link href="/admin/links/new"> {/* Placeholder link */}
+              <Link href="/admin/links/new">
                 <Plus className="mr-2 h-4 w-4" /> Add New Link
               </Link>
             </Button>
