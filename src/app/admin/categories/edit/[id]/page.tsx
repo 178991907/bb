@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, type FormEvent, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,21 +12,41 @@ import type { Category } from '@/app/admin/categories/page'; // Import Category 
 
 const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
 
-export default function CreateCategoryPage() {
+export default function EditCategoryPage() {
   const router = useRouter();
+  const params = useParams();
+  const categoryId = params.id as string;
+
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [icon, setIcon] = useState('');
+  const [originalSlug, setOriginalSlug] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [allCategories, setAllCategories] = useState<Category[]>([]);
+  const [isFetching, setIsFetching] = useState(true);
 
   useEffect(() => {
     const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
     if (storedCategories) {
-      setAllCategories(JSON.parse(storedCategories));
+      const parsedCategories: Category[] = JSON.parse(storedCategories);
+      setAllCategories(parsedCategories);
+      const categoryToEdit = parsedCategories.find(cat => cat.id === categoryId);
+      if (categoryToEdit) {
+        setName(categoryToEdit.name);
+        setSlug(categoryToEdit.slug);
+        setOriginalSlug(categoryToEdit.slug); // Store original slug for uniqueness check
+        setIcon(categoryToEdit.icon || '');
+      } else {
+        setError('Category not found.');
+        // router.push('/admin/categories'); // Or show a not found message
+      }
+    } else {
+      setError('No categories found in storage.');
+       // router.push('/admin/categories');
     }
-  }, []);
+    setIsFetching(false);
+  }, [categoryId, router]);
 
   const generateSlug = (value: string) => {
     return value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -49,42 +69,58 @@ export default function CreateCategoryPage() {
       return;
     }
 
-    // Check for slug uniqueness
-    if (allCategories.some(cat => cat.slug === slug)) {
-      setError('This slug is already in use. Please choose a different name or manually adjust the slug.');
+    // Check for slug uniqueness, excluding the current category's original slug
+    if (slug !== originalSlug && allCategories.some(cat => cat.slug === slug)) {
+      setError('This slug is already in use by another category. Please choose a different name or manually adjust the slug.');
       setIsLoading(false);
       return;
     }
+    
+    const categoryToUpdateIndex = allCategories.findIndex(cat => cat.id === categoryId);
+    if (categoryToUpdateIndex === -1) {
+        setError('Category not found for update.');
+        setIsLoading(false);
+        return;
+    }
 
-    const newCategory: Category = {
-      id: Date.now().toString(), // Simple unique ID
+    const updatedCategory: Category = {
+      ...allCategories[categoryToUpdateIndex], // Preserve ID and createdDate
       name,
       slug,
       icon,
-      createdDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: '2025' }), // Mocking year
     };
 
     try {
-      const updatedCategories = [...allCategories, newCategory];
-      localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(updatedCategories));
-      setAllCategories(updatedCategories); // Update local state for immediate reflection if needed elsewhere
-
-      // Simulate API delay (optional, remove for faster interaction)
-      // await new Promise(resolve => setTimeout(resolve, 500)); 
+      const updatedCategoriesList = [...allCategories];
+      updatedCategoriesList[categoryToUpdateIndex] = updatedCategory;
+      localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(updatedCategoriesList));
+      setAllCategories(updatedCategoriesList);
 
       setIsLoading(false);
-      alert('Category created successfully!'); // Replace with toast notification
+      alert('Category updated successfully!'); // Replace with toast notification
       router.push('/admin/categories');
     } catch (e) {
-      setError('Failed to save category. Please try again.');
+      setError('Failed to update category. Please try again.');
       setIsLoading(false);
-      console.error("Failed to save category to localStorage", e);
+      console.error("Failed to update category in localStorage", e);
     }
   };
 
   const handleCancel = () => {
     router.push('/admin/categories');
   };
+  
+  if (isFetching) {
+    return <div>Loading category details...</div>;
+  }
+
+  if (error && !name) { // If error fetching and no category name loaded
+    return <div className="p-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={() => router.push('/admin/categories')} className="mt-4">Go back to Categories</Button>
+      </div>;
+  }
+
 
   return (
     <div className="space-y-6">
@@ -92,13 +128,13 @@ export default function CreateCategoryPage() {
         <Button variant="outline" size="icon" onClick={handleCancel} aria-label="Go back to categories">
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-semibold text-primary">Create Category</h1>
+        <h1 className="text-2xl font-semibold text-primary">Edit Category</h1>
       </div>
 
       <Card className="w-full max-w-2xl shadow-md">
         <CardHeader>
-          <CardTitle>New Category Details</CardTitle>
-          <CardDescription>Fill in the information for your new category.</CardDescription>
+          <CardTitle>Update Category Details</CardTitle>
+          <CardDescription>Modify the information for this category.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -148,8 +184,8 @@ export default function CreateCategoryPage() {
               <p className="text-sm text-destructive">{error}</p>
             )}
             <div className="flex items-center gap-2 pt-4">
-              <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white" disabled={isLoading}>
-                {isLoading ? 'Creating...' : 'Create Category'}
+              <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isLoading}>
+                {isLoading ? 'Saving...' : 'Save Changes'}
               </Button>
               <Button type="button" variant="outline" onClick={handleCancel} disabled={isLoading}>
                 Cancel

@@ -13,30 +13,70 @@ import {
 } from '@/components/ui/table';
 import { Plus, Pencil, Trash2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import type { LinkItem } from './new/page'; // Import LinkItem type
+import type { Category } from '../categories/page'; // Import Category type
 
-// Mock data for links - in a real app, this would come from a database
-const mockLinks = [
-  { id: '1', title: '搜索', url: 'https://www.baidu.com', category: '常用工具', createdDate: 'May 16, 2025' },
-  { id: '2', title: '搜索', url: 'https://www.baidu.com', category: '常用工具', createdDate: 'May 16, 2025' },
-  { id: '3', title: 'guge', url: 'https://www.google.com', category: '常用工具', createdDate: 'May 16, 2025' },
-  { id: '4', title: 'guge', url: 'https://www.google.com', category: '常用工具', createdDate: 'May 16, 2025' },
-  { id: '5', title: 'guge', url: 'https://www.google.com', category: '常用工具', createdDate: 'May 16, 2025' },
-  { id: '6', title: 'baidu', url: 'https://www.baidu.com', category: '常用工具', createdDate: 'May 16, 2025' },
-  { id: '7', title: 'baidu', url: 'https://www.baidu.com', category: '常用工具', createdDate: 'May 16, 2025' },
-  { id: '8', title: '谷歌', url: 'https://www.google.com', category: '常用工具', createdDate: 'May 16, 2025' },
+const LOCAL_STORAGE_LINKS_KEY = 'linkHubLinks';
+const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
+
+// Initial mock data if localStorage is empty
+const initialMockLinks: LinkItem[] = [
+  { id: 'L1', title: '搜索 (Baidu)', url: 'https://www.baidu.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2025', imageUrl: 'https://placehold.co/120x80.png', aiHint: 'search baidu' },
+  { id: 'L2', title: '搜索 (Baidu)', url: 'https://www.baidu.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2025', imageUrl: 'https://placehold.co/120x80.png', aiHint: 'search baidu' },
+  { id: 'L3', title: 'guge (Google)', url: 'https://www.google.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2025', imageUrl: 'https://placehold.co/120x80.png', aiHint: 'search google' },
+  { id: 'L4', title: '字母游戏', url: '#game-alphabet', categoryId: '2', categoryName: '儿童游戏', createdDate: 'May 17, 2025', imageUrl: 'https://placehold.co/100x100.png', aiHint: 'alphabet game' },
 ];
 
 export default function AdminLinksPage() {
+  const router = useRouter();
+  const [links, setLinks] = useState<LinkItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
+    const parsedCategories: Category[] = storedCategories ? JSON.parse(storedCategories) : [];
+    setCategories(parsedCategories);
+
+    const storedLinks = localStorage.getItem(LOCAL_STORAGE_LINKS_KEY);
+    if (storedLinks) {
+      const parsedLinks: LinkItem[] = JSON.parse(storedLinks);
+      // Ensure categoryName is up-to-date
+      const updatedLinks = parsedLinks.map(link => ({
+        ...link,
+        categoryName: parsedCategories.find(cat => cat.id === link.categoryId)?.name || 'Unknown Category',
+      }));
+      setLinks(updatedLinks);
+    } else {
+      // If no links, set initial mock links and update their category names
+       const updatedInitialLinks = initialMockLinks.map(link => ({
+        ...link,
+        categoryName: parsedCategories.find(cat => cat.id === link.categoryId)?.name || link.categoryName || 'Unknown Category',
+      }));
+      setLinks(updatedInitialLinks);
+      localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedInitialLinks));
+    }
+    setIsLoading(false);
+  }, []);
+  
   const handleEdit = (linkId: string) => {
-    // Placeholder for edit functionality
-    alert(`Edit link with ID: ${linkId} (mock)`);
+    router.push(`/admin/links/edit/${linkId}`);
   };
 
   const handleDelete = (linkId: string) => {
-    // Placeholder for delete functionality
-    // In a real app, you'd show a confirmation dialog first
-    alert(`Delete link with ID: ${linkId} (mock)`);
+    if (window.confirm('Are you sure you want to delete this link? This action cannot be undone.')) {
+      const updatedLinks = links.filter(link => link.id !== linkId);
+      setLinks(updatedLinks);
+      localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedLinks));
+      alert('Link deleted successfully (mock)!');
+    }
   };
+  
+  if (isLoading) {
+    return <div>Loading links...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -65,7 +105,7 @@ export default function AdminLinksPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockLinks.map((link) => (
+              {links.map((link) => (
                 <TableRow key={link.id}>
                   <TableCell className="font-medium">{link.title}</TableCell>
                   <TableCell>
@@ -75,11 +115,11 @@ export default function AdminLinksPage() {
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:underline inline-flex items-center"
                     >
-                      {link.url}
+                      {link.url.length > 30 ? `${link.url.substring(0, 30)}...` : link.url}
                       <ExternalLink className="ml-1 h-3 w-3" />
                     </a>
                   </TableCell>
-                  <TableCell>{link.category}</TableCell>
+                  <TableCell>{link.categoryName || 'N/A'}</TableCell>
                   <TableCell>{link.createdDate}</TableCell>
                   <TableCell className="text-right">
                     <Button
@@ -105,7 +145,7 @@ export default function AdminLinksPage() {
               ))}
             </TableBody>
           </Table>
-          {mockLinks.length === 0 && (
+          {links.length === 0 && (
             <p className="text-center text-muted-foreground py-4">No links found. Add one to get started!</p>
           )}
         </CardContent>

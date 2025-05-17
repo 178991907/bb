@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, type FormEvent, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,43 +10,58 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
+import type { LinkItem } from '../new/page'; // Import LinkItem type
 import type { Category } from '@/app/admin/categories/page'; // Import Category type
 
 const LOCAL_STORAGE_LINKS_KEY = 'linkHubLinks';
 const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
 
-export interface LinkItem {
-  id: string;
-  title: string;
-  url: string;
-  description?: string;
-  categoryId: string;
-  categoryName?: string; // Optional, can be derived
-  createdDate: string;
-  imageUrl?: string; // For frontend display
-  aiHint?: string; // For frontend display
-}
-
-
-export default function CreateLinkPage() {
+export default function EditLinkPage() {
   const router = useRouter();
+  const params = useParams();
+  const linkId = params.id as string;
+
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [aiHint, setAiHint] = useState('');
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
+  const [allLinks, setAllLinks] = useState<LinkItem[]>([]);
+  const [isFetching, setIsFetching] = useState(true);
 
   useEffect(() => {
     const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
     if (storedCategories) {
       setAvailableCategories(JSON.parse(storedCategories));
     } else {
-      // Fallback or prompt to create categories first
       setError('No categories available. Please create a category first.');
     }
-  }, []);
+
+    const storedLinks = localStorage.getItem(LOCAL_STORAGE_LINKS_KEY);
+    if (storedLinks) {
+      const parsedLinks: LinkItem[] = JSON.parse(storedLinks);
+      setAllLinks(parsedLinks);
+      const linkToEdit = parsedLinks.find(link => link.id === linkId);
+      if (linkToEdit) {
+        setTitle(linkToEdit.title);
+        setUrl(linkToEdit.url);
+        setDescription(linkToEdit.description || '');
+        setCategoryId(linkToEdit.categoryId);
+        setImageUrl(linkToEdit.imageUrl || `https://placehold.co/120x80.png`);
+        setAiHint(linkToEdit.aiHint || '');
+      } else {
+        setError('Link not found.');
+      }
+    } else {
+      setError('No links found in storage.');
+    }
+    setIsFetching(false);
+  }, [linkId]);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -67,34 +82,39 @@ export default function CreateLinkPage() {
       return;
     }
     
+    const linkToUpdateIndex = allLinks.findIndex(link => link.id === linkId);
+    if (linkToUpdateIndex === -1) {
+        setError('Link not found for update.');
+        setIsLoading(false);
+        return;
+    }
+
     const selectedCategory = availableCategories.find(cat => cat.id === categoryId);
 
-    const newLink: LinkItem = {
-      id: Date.now().toString(),
+    const updatedLink: LinkItem = {
+      ...allLinks[linkToUpdateIndex], // Preserve ID and createdDate
       title,
       url,
       description,
       categoryId,
       categoryName: selectedCategory?.name || 'Unknown Category',
-      createdDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: '2025' }), // Mocking year
-      // For new links, imageUrl and aiHint can be empty or have defaults
-      imageUrl: `https://placehold.co/120x80.png`, // Default placeholder
-      aiHint: title.toLowerCase().split(' ').slice(0,2).join(' ') || 'link icon',
+      imageUrl: imageUrl || `https://placehold.co/120x80.png`,
+      aiHint: aiHint || title.toLowerCase().split(' ').slice(0,2).join(' ') || 'link icon',
     };
 
     try {
-      const storedLinks = localStorage.getItem(LOCAL_STORAGE_LINKS_KEY);
-      const currentLinks: LinkItem[] = storedLinks ? JSON.parse(storedLinks) : [];
-      const updatedLinks = [...currentLinks, newLink];
-      localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedLinks));
-      
+      const updatedLinksList = [...allLinks];
+      updatedLinksList[linkToUpdateIndex] = updatedLink;
+      localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedLinksList));
+      setAllLinks(updatedLinksList);
+
       setIsLoading(false);
-      alert('Link created successfully!'); // Replace with toast
+      alert('Link updated successfully!'); // Replace with toast
       router.push('/admin/links');
     } catch (e) {
-      setError('Failed to save link. Please try again.');
+      setError('Failed to update link. Please try again.');
       setIsLoading(false);
-      console.error("Failed to save link to localStorage", e);
+      console.error("Failed to update link in localStorage", e);
     }
   };
 
@@ -102,19 +122,30 @@ export default function CreateLinkPage() {
     router.push('/admin/links');
   };
 
+  if (isFetching) {
+    return <div>Loading link details...</div>;
+  }
+
+  if (error && !title) { // If error fetching and no link title loaded
+    return <div className="p-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={() => router.push('/admin/links')} className="mt-4">Go back to Links</Button>
+      </div>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="outline" size="icon" onClick={handleCancel} aria-label="Go back to links">
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-semibold text-primary">Create New Link</h1>
+        <h1 className="text-2xl font-semibold text-primary">Edit Link</h1>
       </div>
 
       <Card className="w-full max-w-2xl shadow-md">
         <CardHeader>
-          <CardTitle>New Link Details</CardTitle>
-          <CardDescription>Fill in the information for your new link.</CardDescription>
+          <CardTitle>Update Link Details</CardTitle>
+          <CardDescription>Modify the information for this link.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -152,6 +183,34 @@ export default function CreateLinkPage() {
                 className="min-h-[100px]"
               />
             </div>
+             <div className="space-y-2">
+              <Label htmlFor="imageUrl">Image URL (optional)</Label>
+              <Input
+                id="imageUrl"
+                type="url"
+                placeholder="https://example.com/image.png"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                className="h-10"
+              />
+              <p className="text-xs text-muted-foreground">
+                URL for the link&apos;s display image. Defaults to a placeholder.
+              </p>
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="aiHint">AI Hint for Image (optional)</Label>
+              <Input
+                id="aiHint"
+                type="text"
+                placeholder="e.g. tech logo"
+                value={aiHint}
+                onChange={(e) => setAiHint(e.target.value)}
+                className="h-10"
+              />
+               <p className="text-xs text-muted-foreground">
+                Keywords for image search (max 2 words).
+              </p>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
               <Select value={categoryId} onValueChange={setCategoryId} required>
@@ -166,17 +225,17 @@ export default function CreateLinkPage() {
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="disabled" disabled>No categories available</SelectItem>
+                     <SelectItem value="disabled" disabled>No categories available</SelectItem>
                   )}
                 </SelectContent>
               </Select>
             </div>
             {error && (
-              <p className="text-sm text-destructive">{error}</p>
+             <p className="text-sm text-destructive">{error}</p>
             )}
             <div className="flex items-center gap-2 pt-4">
-              <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white" disabled={isLoading || availableCategories.length === 0}>
-                {isLoading ? 'Creating...' : 'Create Link'}
+              <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isLoading || availableCategories.length === 0}>
+                {isLoading ? 'Saving...' : 'Save Changes'}
               </Button>
               <Button type="button" variant="outline" onClick={handleCancel} disabled={isLoading}>
                 Cancel

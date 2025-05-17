@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Plus, Pencil, Trash2, ArrowUpDown } from 'lucide-react';
@@ -13,31 +13,63 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-// Mock data for categories - in a real app, this would come from a database
-export const mockCategories = [
-  { id: '1', name: '常用工具', slug: 'common-tools', createdDate: 'May 16, 2025' },
-  { id: '2', name: '儿童游戏', slug: 'kids-games', createdDate: 'May 16, 2025' },
-  // Add more mock categories as needed
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  icon?: string;
+  createdDate: string;
+}
+
+const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
+
+// Initial mock data if localStorage is empty
+const initialMockCategories: Category[] = [
+  { id: '1', name: '常用工具', slug: 'common-tools', createdDate: 'May 16, 2025', icon: 'tool' },
+  { id: '2', name: '儿童游戏', slug: 'kids-games', createdDate: 'May 16, 2025', icon: 'gamepad-2' },
 ];
 
 export default function AdminCategoriesPage() {
+  const router = useRouter();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
+    if (storedCategories) {
+      setCategories(JSON.parse(storedCategories));
+    } else {
+      setCategories(initialMockCategories);
+      localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(initialMockCategories));
+    }
+    setIsLoading(false);
+  }, []);
+
   const handleEdit = (categoryId: string) => {
-    // Placeholder for edit functionality
-    // router.push(`/admin/categories/edit/${categoryId}`);
-    alert(`Edit category with ID: ${categoryId} (mock)`);
+    router.push(`/admin/categories/edit/${categoryId}`);
   };
 
   const handleDelete = (categoryId: string) => {
-    // Placeholder for delete functionality
-    // In a real app, you'd show a confirmation dialog first
-    alert(`Delete category with ID: ${categoryId} (mock)`);
+    if (window.confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
+      const updatedCategories = categories.filter(category => category.id !== categoryId);
+      setCategories(updatedCategories);
+      localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(updatedCategories));
+      // In a real app, also delete associated links or handle them as per requirements
+      alert('Category deleted successfully (mock)!');
+    }
   };
 
   const handleReorder = () => {
     // Placeholder for reorder functionality
-    alert('Reorder categories (mock)');
+    alert('Reorder categories (mock - not implemented with localStorage persistence)');
   };
+
+  if (isLoading) {
+    return <div>Loading categories...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -55,26 +87,23 @@ export default function AdminCategoriesPage() {
         </div>
       </div>
       <Card className="shadow-md">
-        <CardHeader>
-          {/* CardTitle and CardDescription can be removed or kept as per final design preference */}
-          {/* <CardTitle>Existing Categories</CardTitle> */}
-          {/* <CardDescription>View, edit, or delete your categories.</CardDescription> */}
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6"> {/* Added pt-6 to CardContent as CardHeader is removed */}
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Slug</TableHead>
+                <TableHead>Icon</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockCategories.map((category) => (
+              {categories.map((category) => (
                 <TableRow key={category.id}>
                   <TableCell className="font-medium">{category.name}</TableCell>
                   <TableCell>{category.slug}</TableCell>
+                  <TableCell>{category.icon || '-'}</TableCell>
                   <TableCell>{category.createdDate}</TableCell>
                   <TableCell className="text-right">
                     <Button
@@ -100,7 +129,7 @@ export default function AdminCategoriesPage() {
               ))}
             </TableBody>
           </Table>
-          {mockCategories.length === 0 && (
+          {categories.length === 0 && (
             <p className="text-center text-muted-foreground py-8">
               No categories found. Add one to get started!
             </p>
