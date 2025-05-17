@@ -10,7 +10,7 @@ export default function AdminCategoriesPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-primary">Manage Categories</h1>
         <Button asChild>
-          <Link href="/admin/categories/new"> {/* Placeholder link */}
+          <Link href="/admin/categories/new">
             <Plus className="mr-2 h-4 w-4" /> Add New Category
           </Link>
         </Button>
