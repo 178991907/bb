@@ -61,7 +61,7 @@ export default function CreateCategoryPage() {
       name,
       slug,
       icon,
-      createdDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: '2025' }), // Mocking year
+      createdDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
     };
 
     try {
@@ -70,7 +70,7 @@ export default function CreateCategoryPage() {
       setAllCategories(updatedCategories); // Update local state for immediate reflection if needed elsewhere
 
       // Simulate API delay (optional, remove for faster interaction)
-      // await new Promise(resolve => setTimeout(resolve, 500)); 
+      // await new Promise(resolve => setTimeout(resolve, 500));
 
       setIsLoading(false);
       alert('Category created successfully!'); // Replace with toast notification

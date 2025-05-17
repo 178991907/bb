@@ -66,7 +66,7 @@ export default function CreateLinkPage() {
       setIsLoading(false);
       return;
     }
-    
+
     const selectedCategory = availableCategories.find(cat => cat.id === categoryId);
 
     const newLink: LinkItem = {
@@ -76,7 +76,7 @@ export default function CreateLinkPage() {
       description,
       categoryId,
       categoryName: selectedCategory?.name || 'Unknown Category',
-      createdDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: '2025' }), // Mocking year
+      createdDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       // For new links, imageUrl and aiHint can be empty or have defaults
       imageUrl: `https://placehold.co/120x80.png`, // Default placeholder
       aiHint: title.toLowerCase().split(' ').slice(0,2).join(' ') || 'link icon',
@@ -87,7 +87,7 @@ export default function CreateLinkPage() {
       const currentLinks: LinkItem[] = storedLinks ? JSON.parse(storedLinks) : [];
       const updatedLinks = [...currentLinks, newLink];
       localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedLinks));
-      
+
       setIsLoading(false);
       alert('Link created successfully!'); // Replace with toast
       router.push('/admin/links');
