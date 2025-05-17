@@ -33,7 +33,6 @@ const initialMockLinks: LinkItem[] = [
   { id: 'L1', title: '搜索 (Baidu)', url: 'https://www.baidu.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2025', imageUrl: 'https://placehold.co/120x80.png', aiHint: 'search baidu', description: 'Leading Chinese Search Engine' },
   { id: 'L3', title: 'guge (Google)', url: 'https://www.google.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2025', imageUrl: 'https://placehold.co/120x80.png', aiHint: 'search google', description: 'Global Search Engine' },
   { id: 'g1', title: '字母游戏', url: '#game-alphabet', categoryId: '2', categoryName: '儿童游戏', createdDate: 'May 17, 2025', imageUrl: 'https://placehold.co/100x100.png', aiHint: 'alphabet game', description: '学习英文字母' },
-  // Example of a card with no image, but title and description to match image "谷歌 1111"
   { id: 'L4', title: '谷歌', url: 'https://www.google.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2025', imageUrl: '', aiHint: 'search example', description: '1111' },
 ];
 
@@ -84,17 +83,14 @@ export default function DashboardPage() {
       <HeaderNav />
 
       <main className="flex-grow container mx-auto px-4 py-12 sm:py-16 md:py-20 text-center">
-        <div className="mb-8">
+        <div className="mb-12"> {/* Increased margin bottom for logo */}
           <LogoDisplay logoUrl={siteSettings.logoUrl} siteName={siteSettings.siteName} />
         </div>
 
-        <h1 className="text-5xl font-bold text-foreground mb-4">
-          Hello
-        </h1>
-        <p className="text-3xl text-primary font-semibold mb-2">
+        <p className="text-4xl sm:text-5xl font-bold mb-3 bg-clip-text text-transparent animated-text-gradient-en">
           {siteSettings.welcomeMessageEn}
         </p>
-        <p className="text-xl text-accent mb-12"> {/* text-accent for orange */}
+        <p className="text-2xl sm:text-3xl font-semibold mb-12 bg-clip-text text-transparent animated-text-gradient-zh">
           {siteSettings.welcomeMessageZh}
         </p>
 
@@ -113,7 +109,7 @@ export default function DashboardPage() {
 
         {categories.map(category => {
           const itemsForCategory = filteredLinks.filter(item => item.categoryId === category.id);
-          if (itemsForCategory.length === 0 && searchTerm) return null; // Hide category if search yields no results for it
+          if (itemsForCategory.length === 0 && searchTerm) return null; 
 
           return (
             <section key={category.id} className="mb-16">
@@ -121,13 +117,12 @@ export default function DashboardPage() {
               {itemsForCategory.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {itemsForCategory.map((item) => {
-                    // Adapt LinkItem to Tool interface for ToolCard
                     const toolItem: Tool = {
                       id: item.id,
                       title: item.title,
                       description: item.description,
                       link: item.url,
-                      imageUrl: item.imageUrl || '', // Pass empty string if no image
+                      imageUrl: item.imageUrl || '', 
                       aiHint: item.aiHint || 'icon',
                     };
                     return <ToolCard key={item.id} tool={toolItem} />;
