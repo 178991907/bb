@@ -41,7 +41,7 @@ export default function AdminLinksPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-primary">Manage Links</h1>
+        <h1 className="text-3xl font-bold text-primary">Links</h1>
         <Button asChild className="bg-green-600 hover:bg-green-700 text-white">
           <Link href="/admin/links/new">
             <Plus className="mr-2 h-4 w-4" /> Add Link

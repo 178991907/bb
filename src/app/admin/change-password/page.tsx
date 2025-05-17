@@ -40,7 +40,7 @@ export default function AdminChangePasswordPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-primary">Change Password</h1>
+      <h1 className="text-3xl font-bold text-primary">Change Password</h1>
       <Card className="w-full max-w-lg mx-auto shadow-md">
         <CardHeader>
           <CardTitle>Update Your Password</CardTitle>
