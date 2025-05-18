@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { LinkItem } from './new/page'; // Import LinkItem type
 import type { Category } from '../categories/page'; // Import Category type
+import { useToast } from "@/hooks/use-toast";
 
 const LOCAL_STORAGE_LINKS_KEY = 'linkHubLinks';
 const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
@@ -31,6 +32,7 @@ const initialMockLinks: LinkItem[] = [
 
 export default function AdminLinksPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,11 +68,24 @@ export default function AdminLinksPage() {
   };
 
   const handleDelete = (linkId: string) => {
-    if (window.confirm('Are you sure you want to delete this link? This action cannot be undone.')) {
+    const linkToDelete = links.find(link => link.id === linkId);
+    if (!linkToDelete) {
+      toast({
+        title: "Error",
+        description: "Link not found for deletion.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (window.confirm(`Are you sure you want to delete the link "${linkToDelete.title}"? This action cannot be undone.`)) {
       const updatedLinks = links.filter(link => link.id !== linkId);
       setLinks(updatedLinks);
       localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedLinks));
-      alert('Link deleted successfully (mock)!');
+      toast({
+        title: "Link Deleted",
+        description: `The link "${linkToDelete.title}" has been successfully deleted.`,
+      });
     }
   };
   
