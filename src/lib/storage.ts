@@ -122,7 +122,14 @@ export function getStorage(): Storage {
   const databaseUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
 
   if (databaseUrl) {
-    return new CloudDatabaseStorage(databaseUrl);
+    try {
+      const storage = new CloudDatabaseStorage(databaseUrl);
+      return storage;
+    } catch (error) {
+      console.error('Failed to connect to cloud database:', error);
+      // Rethrow the error to indicate that cloud database connection failed
+      throw error;
+    }
   } else {
     return new LocalStorage();
   }
