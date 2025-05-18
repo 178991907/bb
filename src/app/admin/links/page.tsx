@@ -50,9 +50,11 @@ export default function AdminLinksPage() {
         parsedCategories = JSON.parse(storedCategories);
       } catch (e) {
         console.error("Failed to parse categories from localStorage for links page:", e);
+        // If categories are corrupted, reset them in localStorage
         localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(initialMockCategories));
       }
     } else {
+       // Initialize categories in localStorage if not present
        localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(initialMockCategories));
     }
     const catMap = new Map(parsedCategories.map(cat => [cat.id, cat.name]));
@@ -61,14 +63,16 @@ export default function AdminLinksPage() {
     const storedLinks = localStorage.getItem(LOCAL_STORAGE_LINKS_KEY);
     if (storedLinks) {
       try {
-        const parsedLinks: LinkItem[] = JSON.parse(storedLinks);
-        const updatedLinks = parsedLinks.map(link => ({
+        const parsedLinksList: LinkItem[] = JSON.parse(storedLinks);
+        // Ensure categoryName is updated based on the latest categoriesMap
+        const updatedLinks = parsedLinksList.map(link => ({
           ...link,
           categoryName: catMap.get(link.categoryId) || 'Unknown Category',
         }));
         setLinks(updatedLinks);
       } catch (e) {
          console.error("Failed to parse links from localStorage:", e);
+         // Fallback: use initial mock links, update category names, and reset them in localStorage
          const updatedInitialLinks = initialMockLinks.map(link => ({
           ...link,
           categoryName: catMap.get(link.categoryId) || link.categoryName || 'Unknown Category',
@@ -77,6 +81,7 @@ export default function AdminLinksPage() {
         localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedInitialLinks));
       }
     } else {
+      // Initialize links in localStorage if not present
       const updatedInitialLinks = initialMockLinks.map(link => ({
         ...link,
         categoryName: catMap.get(link.categoryId) || link.categoryName || 'Unknown Category',
@@ -92,20 +97,29 @@ export default function AdminLinksPage() {
   };
 
   const handleDelete = (linkId: string) => {
+    // Find the link based on the current state to get its title for user messages.
+    // This is generally safe as it's for display; the actual filter will use the guaranteed latest state.
     const linkToDelete = links.find(link => link.id === linkId);
+
     if (!linkToDelete) {
       toast({
         title: "Error",
-        description: "Link not found for deletion.",
+        description: "Link not found for deletion. The list might have been updated by another action.",
         variant: "destructive",
       });
       return;
     }
 
     if (window.confirm(`Are you sure you want to delete the link "${linkToDelete.title}"? This action cannot be undone.`)) {
-      const updatedLinks = links.filter(link => link.id !== linkId);
-      setLinks(updatedLinks);
-      localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedLinks));
+      // Use functional update for setLinks to ensure we operate on the latest state
+      setLinks(prevLinks => {
+        const updatedLinks = prevLinks.filter(link => link.id !== linkId);
+        // Persist the change to localStorage based on this truly updated list
+        localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedLinks));
+        return updatedLinks; // Return the new state for React to re-render
+      });
+
+      // Show success toast. linkToDelete.title is from the `links` state at the time of the click.
       toast({
         title: "Link Deleted",
         description: `The link "${linkToDelete.title}" has been successfully deleted.`,
