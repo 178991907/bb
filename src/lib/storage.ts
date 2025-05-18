@@ -29,10 +29,10 @@ class LocalStorage implements Storage {
 
 // Cloud Database Storage implementation (example)
 class CloudDatabaseStorage implements Storage {
-  private apiKey: string;
+  private dbUrl: string;
 
-  constructor(apiKey: string) {
-    this.apiKey = apiKey;
+  constructor(dbUrl: string) {
+    this.dbUrl = dbUrl;
     console.log("Using cloud database mode");
     // Initialize your cloud database connection here
   }
@@ -52,10 +52,10 @@ class CloudDatabaseStorage implements Storage {
 
 // Function to get the appropriate storage instance
 export function getStorage(): Storage {
-  const postgresConnectionString = process.env.DATABASE_API_KEY;
+  const databaseUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
 
-  if (postgresConnectionString) {
-    return new CloudDatabaseStorage(postgresConnectionString);
+  if (databaseUrl) {
+    return new CloudDatabaseStorage(databaseUrl);
   } else {
     return new LocalStorage();
   }
