@@ -20,14 +20,24 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
     if (storedCategories) {
-      const parsedCategories: Category[] = JSON.parse(storedCategories);
-      setTotalCategories(parsedCategories.length);
+      try {
+        const parsedCategories: Category[] = JSON.parse(storedCategories);
+        setTotalCategories(parsedCategories.length);
+      } catch (e) {
+        console.error("Failed to parse categories from localStorage on dashboard:", e);
+        setTotalCategories(0); // Fallback
+      }
     }
 
     const storedLinks = localStorage.getItem(LOCAL_STORAGE_LINKS_KEY);
     if (storedLinks) {
-      const parsedLinks: LinkItem[] = JSON.parse(storedLinks);
-      setTotalLinks(parsedLinks.length);
+      try {
+        const parsedLinks: LinkItem[] = JSON.parse(storedLinks);
+        setTotalLinks(parsedLinks.length);
+      } catch (e) {
+        console.error("Failed to parse links from localStorage on dashboard:", e);
+        setTotalLinks(0); // Fallback
+      }
     }
     setIsLoading(false);
   }, []);

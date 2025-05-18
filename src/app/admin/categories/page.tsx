@@ -27,9 +27,9 @@ export interface Category {
 const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
 
 // Initial mock data if localStorage is empty
-const initialMockCategories: Category[] = [
-  { id: '1', name: '常用工具', slug: 'common-tools', createdDate: 'May 16, 2025', icon: 'tool' },
-  { id: '2', name: '儿童游戏', slug: 'kids-games', createdDate: 'May 16, 2025', icon: 'gamepad-2' },
+export const initialMockCategories: Category[] = [ // Exported for use in links/new
+  { id: '1', name: '常用工具', slug: 'common-tools', createdDate: 'May 16, 2024', icon: 'tool' },
+  { id: '2', name: '儿童游戏', slug: 'kids-games', createdDate: 'May 16, 2024', icon: 'gamepad-2' },
 ];
 
 export default function AdminCategoriesPage() {
@@ -40,8 +40,16 @@ export default function AdminCategoriesPage() {
   useEffect(() => {
     const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
     if (storedCategories) {
-      setCategories(JSON.parse(storedCategories));
+      try {
+        setCategories(JSON.parse(storedCategories));
+      } catch (e) {
+        console.error("Failed to parse categories from localStorage:", e);
+        // Fallback to initial mock data and reset localStorage
+        setCategories(initialMockCategories);
+        localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(initialMockCategories));
+      }
     } else {
+      // Initialize with mock data if nothing is in localStorage
       setCategories(initialMockCategories);
       localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(initialMockCategories));
     }
@@ -87,7 +95,7 @@ export default function AdminCategoriesPage() {
         </div>
       </div>
       <Card className="shadow-md">
-        <CardContent className="pt-6"> {/* Added pt-6 to CardContent as CardHeader is removed */}
+        <CardContent className="pt-6">
           <Table>
             <TableHeader>
               <TableRow>

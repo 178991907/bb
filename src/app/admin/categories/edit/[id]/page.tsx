@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
-import type { Category } from '@/app/admin/categories/page'; // Import Category type
+import type { Category } from '@/app/admin/categories/page'; 
 
 const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
 
@@ -29,24 +29,27 @@ export default function EditCategoryPage() {
   useEffect(() => {
     const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
     if (storedCategories) {
-      const parsedCategories: Category[] = JSON.parse(storedCategories);
-      setAllCategories(parsedCategories);
-      const categoryToEdit = parsedCategories.find(cat => cat.id === categoryId);
-      if (categoryToEdit) {
-        setName(categoryToEdit.name);
-        setSlug(categoryToEdit.slug);
-        setOriginalSlug(categoryToEdit.slug); // Store original slug for uniqueness check
-        setIcon(categoryToEdit.icon || '');
-      } else {
-        setError('Category not found.');
-        // router.push('/admin/categories'); // Or show a not found message
+      try {
+        const parsedCategories: Category[] = JSON.parse(storedCategories);
+        setAllCategories(parsedCategories);
+        const categoryToEdit = parsedCategories.find(cat => cat.id === categoryId);
+        if (categoryToEdit) {
+          setName(categoryToEdit.name);
+          setSlug(categoryToEdit.slug);
+          setOriginalSlug(categoryToEdit.slug); 
+          setIcon(categoryToEdit.icon || '');
+        } else {
+          setError('Category not found.');
+        }
+      } catch (e) {
+        console.error("Failed to parse categories from localStorage on edit page:", e);
+        setError('Failed to load category data. Data might be corrupted.');
       }
     } else {
       setError('No categories found in storage.');
-       // router.push('/admin/categories');
     }
     setIsFetching(false);
-  }, [categoryId, router]);
+  }, [categoryId]); // Removed router from dependencies as it's not used in the effect for navigation logic here
 
   const generateSlug = (value: string) => {
     return value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -69,7 +72,6 @@ export default function EditCategoryPage() {
       return;
     }
 
-    // Check for slug uniqueness, excluding the current category's original slug
     if (slug !== originalSlug && allCategories.some(cat => cat.slug === slug)) {
       setError('This slug is already in use by another category. Please choose a different name or manually adjust the slug.');
       setIsLoading(false);
@@ -84,7 +86,7 @@ export default function EditCategoryPage() {
     }
 
     const updatedCategory: Category = {
-      ...allCategories[categoryToUpdateIndex], // Preserve ID and createdDate
+      ...allCategories[categoryToUpdateIndex], 
       name,
       slug,
       icon,
@@ -97,7 +99,7 @@ export default function EditCategoryPage() {
       setAllCategories(updatedCategoriesList);
 
       setIsLoading(false);
-      alert('Category updated successfully!'); // Replace with toast notification
+      alert('Category updated successfully!'); 
       router.push('/admin/categories');
     } catch (e) {
       setError('Failed to update category. Please try again.');
@@ -114,7 +116,7 @@ export default function EditCategoryPage() {
     return <div>Loading category details...</div>;
   }
 
-  if (error && !name) { // If error fetching and no category name loaded
+  if (error && !name) { 
     return <div className="p-4">
         <p className="text-destructive">{error}</p>
         <Button onClick={() => router.push('/admin/categories')} className="mt-4">Go back to Categories</Button>

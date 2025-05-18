@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
-import type { Category } from '@/app/admin/categories/page'; // Import Category type
+import type { Category } from '@/app/admin/categories/page'; 
 
 const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
 
@@ -24,7 +24,12 @@ export default function CreateCategoryPage() {
   useEffect(() => {
     const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
     if (storedCategories) {
-      setAllCategories(JSON.parse(storedCategories));
+      try {
+        setAllCategories(JSON.parse(storedCategories));
+      } catch (e) {
+        console.error("Failed to parse allCategories from localStorage:", e);
+        setAllCategories([]); 
+      }
     }
   }, []);
 
@@ -49,7 +54,6 @@ export default function CreateCategoryPage() {
       return;
     }
 
-    // Check for slug uniqueness
     if (allCategories.some(cat => cat.slug === slug)) {
       setError('This slug is already in use. Please choose a different name or manually adjust the slug.');
       setIsLoading(false);
@@ -57,7 +61,7 @@ export default function CreateCategoryPage() {
     }
 
     const newCategory: Category = {
-      id: Date.now().toString(), // Simple unique ID
+      id: Date.now().toString(), 
       name,
       slug,
       icon,
@@ -67,13 +71,10 @@ export default function CreateCategoryPage() {
     try {
       const updatedCategories = [...allCategories, newCategory];
       localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(updatedCategories));
-      setAllCategories(updatedCategories); // Update local state for immediate reflection if needed elsewhere
-
-      // Simulate API delay (optional, remove for faster interaction)
-      // await new Promise(resolve => setTimeout(resolve, 500));
+      setAllCategories(updatedCategories); 
 
       setIsLoading(false);
-      alert('Category created successfully!'); // Replace with toast notification
+      alert('Category created successfully!'); 
       router.push('/admin/categories');
     } catch (e) {
       setError('Failed to save category. Please try again.');

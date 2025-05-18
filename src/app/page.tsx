@@ -1,5 +1,5 @@
 
-'use client'; // This page now needs to be a client component to use localStorage
+'use client'; 
 
 import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
@@ -10,10 +10,10 @@ import { ToolCard, type Tool } from '@/components/dashboard/ToolCard';
 import type { Category } from '@/app/admin/categories/page';
 import type { LinkItem } from '@/app/admin/links/new/page';
 
-// These values correspond to the defaults in src/app/admin/settings/page.tsx
+
 const siteSettings = {
-  siteName: '英语全科启蒙', // This is used if logo fallback text is needed
-  logoUrl: 'https://pic1.imgdb.cn/item/6817c79a58cb8da5c8dc723f.png', // Updated to use image logo
+  siteName: '英语全科启蒙', 
+  logoUrl: 'https://pic1.imgdb.cn/item/6817c79a58cb8da5c8dc723f.png',
   welcomeMessageEn: 'Welcome to All-Subject English Enlightenment',
   welcomeMessageZh: '系统 (平台) 由 Erin 英语全科启蒙团队独立开发完成',
   footerText: '© 2025 All-Subject English Enlightenment. All rights reserved. 由 Terry 开发和维护',
@@ -22,17 +22,16 @@ const siteSettings = {
 const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
 const LOCAL_STORAGE_LINKS_KEY = 'linkHubLinks';
 
-// Initial mock data (will be overridden by localStorage if available)
 const initialMockCategories: Category[] = [
   { id: '1', name: '常用工具', slug: 'common-tools', createdDate: 'May 16, 2024', icon: 'tool' },
   { id: '2', name: '儿童游戏', slug: 'kids-games', createdDate: 'May 16, 2024', icon: 'gamepad-2' },
 ];
 
 const initialMockLinks: LinkItem[] = [
-  { id: 'L1', title: '搜索 (Baidu)', url: 'https://www.baidu.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2024', imageUrl: 'https://placehold.co/120x80.png', aiHint: 'search baidu', description: 'Leading Chinese Search Engine' },
-  { id: 'L3', title: 'guge (Google)', url: 'https://www.google.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2024', imageUrl: 'https://placehold.co/120x80.png', aiHint: 'search google', description: 'Global Search Engine' },
-  { id: 'g1', title: '字母游戏', url: '#game-alphabet', categoryId: '2', categoryName: '儿童游戏', createdDate: 'May 17, 2024', imageUrl: 'https://placehold.co/100x100.png', aiHint: 'alphabet game', description: '学习英文字母' },
-  { id: 'L4', title: '谷歌', url: 'https://www.google.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2024', imageUrl: '', aiHint: 'search example', description: '1111' },
+  { id: 'L1', title: '搜索 (Baidu)', url: 'https://www.baidu.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2024', imageUrl: 'https://placehold.co/120x80.png', aiHint: 'search baidu', description: 'Leading Chinese Search Engine', faviconUrl: '' },
+  { id: 'L3', title: 'guge (Google)', url: 'https://www.google.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2024', imageUrl: 'https://placehold.co/120x80.png', aiHint: 'search google', description: 'Global Search Engine', faviconUrl: '' },
+  { id: 'g1', title: '字母游戏', url: '#game-alphabet', categoryId: '2', categoryName: '儿童游戏', createdDate: 'May 17, 2024', imageUrl: 'https://placehold.co/100x100.png', aiHint: 'alphabet game', description: '学习英文字母', faviconUrl: '' },
+  { id: 'L4', title: '谷歌', url: 'https://www.google.com', categoryId: '1', categoryName: '常用工具', createdDate: 'May 16, 2024', imageUrl: '', aiHint: 'search example', description: '1111', faviconUrl: '' },
 ];
 
 
@@ -43,26 +42,46 @@ export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    // Fetch categories from localStorage
+    let loadedCategories: Category[] = initialMockCategories;
     const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
-    const loadedCategories = storedCategories ? JSON.parse(storedCategories) : initialMockCategories;
-    setCategories(loadedCategories);
-    if (!storedCategories) {
+    if (storedCategories) {
+      try {
+        loadedCategories = JSON.parse(storedCategories);
+      } catch (e) {
+        console.error("Failed to parse categories from localStorage on homepage:", e);
+        localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(initialMockCategories));
+      }
+    } else {
         localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(initialMockCategories));
     }
+    setCategories(loadedCategories);
 
-    // Fetch links from localStorage
+    let loadedLinks: LinkItem[] = initialMockLinks;
     const storedLinks = localStorage.getItem(LOCAL_STORAGE_LINKS_KEY);
-    const loadedLinks = storedLinks ? JSON.parse(storedLinks) : initialMockLinks;
-     // Ensure categoryName is present or derived
-    const updatedLinks = loadedLinks.map((link: LinkItem) => ({
-      ...link,
-      categoryName: loadedCategories.find((cat: Category) => cat.id === link.categoryId)?.name || link.categoryName || 'Unknown Category',
-    }));
-    setLinks(updatedLinks);
-     if (!storedLinks) {
-        localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedLinks));
+    if (storedLinks) {
+      try {
+        const parsedLinks: LinkItem[] = JSON.parse(storedLinks);
+        loadedLinks = parsedLinks.map((link: LinkItem) => ({
+          ...link,
+          categoryName: loadedCategories.find((cat: Category) => cat.id === link.categoryId)?.name || link.categoryName || 'Unknown Category',
+        }));
+      } catch (e) {
+        console.error("Failed to parse links from localStorage on homepage:", e);
+        // Fallback and reset if parsing fails
+        loadedLinks = initialMockLinks.map((link: LinkItem) => ({
+          ...link,
+          categoryName: loadedCategories.find((cat: Category) => cat.id === link.categoryId)?.name || link.categoryName || 'Unknown Category',
+        }));
+        localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(loadedLinks));
+      }
+    } else {
+        loadedLinks = initialMockLinks.map((link: LinkItem) => ({
+          ...link,
+          categoryName: loadedCategories.find((cat: Category) => cat.id === link.categoryId)?.name || link.categoryName || 'Unknown Category',
+        }));
+        localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(loadedLinks));
     }
+    setLinks(loadedLinks);
 
     setIsLoading(false);
   }, []);

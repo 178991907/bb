@@ -10,8 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
-import type { LinkItem } from '../new/page'; // Import LinkItem type
-import type { Category } from '@/app/admin/categories/page'; // Import Category type
+import type { LinkItem } from '../new/page'; 
+import type { Category, initialMockCategories as defaultCategories } from '@/app/admin/categories/page'; 
 
 const LOCAL_STORAGE_LINKS_KEY = 'linkHubLinks';
 const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
@@ -36,28 +36,42 @@ export default function EditLinkPage() {
   const [isFetching, setIsFetching] = useState(true);
 
   useEffect(() => {
+    let parsedCategories: Category[] = defaultCategories;
     const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
     if (storedCategories) {
-      setAvailableCategories(JSON.parse(storedCategories));
+      try {
+        parsedCategories = JSON.parse(storedCategories);
+      } catch (e) {
+        console.error("Failed to parse categories from localStorage on edit link page:", e);
+        // Fallback or set empty if corrupted
+        localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(defaultCategories));
+      }
     } else {
+      localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(defaultCategories));
       setError('No categories available. Please create a category first.');
     }
+    setAvailableCategories(parsedCategories);
 
     const storedLinks = localStorage.getItem(LOCAL_STORAGE_LINKS_KEY);
     if (storedLinks) {
-      const parsedLinks: LinkItem[] = JSON.parse(storedLinks);
-      setAllLinks(parsedLinks);
-      const linkToEdit = parsedLinks.find(link => link.id === linkId);
-      if (linkToEdit) {
-        setTitle(linkToEdit.title);
-        setUrl(linkToEdit.url);
-        setDescription(linkToEdit.description || '');
-        setFaviconUrl(linkToEdit.faviconUrl || '');
-        setCategoryId(linkToEdit.categoryId);
-        setImageUrl(linkToEdit.imageUrl || `https://placehold.co/120x80.png`);
-        setAiHint(linkToEdit.aiHint || '');
-      } else {
-        setError('Link not found.');
+      try {
+        const parsedLinksList: LinkItem[] = JSON.parse(storedLinks);
+        setAllLinks(parsedLinksList);
+        const linkToEdit = parsedLinksList.find(link => link.id === linkId);
+        if (linkToEdit) {
+          setTitle(linkToEdit.title);
+          setUrl(linkToEdit.url);
+          setDescription(linkToEdit.description || '');
+          setFaviconUrl(linkToEdit.faviconUrl || '');
+          setCategoryId(linkToEdit.categoryId);
+          setImageUrl(linkToEdit.imageUrl || `https://placehold.co/120x80.png`);
+          setAiHint(linkToEdit.aiHint || '');
+        } else {
+          setError('Link not found.');
+        }
+      } catch (e) {
+         console.error("Failed to parse links from localStorage on edit link page:", e);
+         setError('Failed to load link data. Data might be corrupted.');
       }
     } else {
       setError('No links found in storage.');
@@ -103,7 +117,7 @@ export default function EditLinkPage() {
     const selectedCategory = availableCategories.find(cat => cat.id === categoryId);
 
     const updatedLink: LinkItem = {
-      ...allLinks[linkToUpdateIndex], // Preserve ID and createdDate
+      ...allLinks[linkToUpdateIndex], 
       title,
       url,
       description,
@@ -121,7 +135,7 @@ export default function EditLinkPage() {
       setAllLinks(updatedLinksList);
 
       setIsLoading(false);
-      alert('Link updated successfully!'); // Replace with toast
+      alert('Link updated successfully!'); 
       router.push('/admin/links');
     } catch (e) {
       setError('Failed to update link. Please try again.');
@@ -138,7 +152,7 @@ export default function EditLinkPage() {
     return <div>Loading link details...</div>;
   }
 
-  if (error && !title) { // If error fetching and no link title loaded
+  if (error && !title) { 
     return <div className="p-4">
         <p className="text-destructive">{error}</p>
         <Button onClick={() => router.push('/admin/links')} className="mt-4">Go back to Links</Button>
@@ -166,7 +180,7 @@ export default function EditLinkPage() {
               <Input
                 id="title"
                 type="text"
-                placeholder="e.g. Google"
+                placeholder="e.g. Google Search"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
@@ -178,7 +192,7 @@ export default function EditLinkPage() {
               <Input
                 id="url"
                 type="url"
-                placeholder="e.g. https://google.com"
+                placeholder="e.g. https://www.google.com"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 required
@@ -189,7 +203,7 @@ export default function EditLinkPage() {
               <Label htmlFor="description">Description (optional)</Label>
               <Textarea
                 id="description"
-                placeholder="e.g. Search engine"
+                placeholder="e.g. The world's most popular search engine."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="min-h-[100px]"
@@ -201,7 +215,7 @@ export default function EditLinkPage() {
                 <Input
                   id="faviconUrl"
                   type="url"
-                  placeholder="e.g. https://google.com/favicon.ico"
+                  placeholder="e.g. https://www.google.com/favicon.ico"
                   value={faviconUrl}
                   onChange={(e) => setFaviconUrl(e.target.value)}
                   className="h-10 flex-grow"

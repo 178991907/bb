@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
-import type { Category } from '@/app/admin/categories/page'; // Import Category type
+import type { Category, initialMockCategories as defaultCategories } from '@/app/admin/categories/page'; // Import Category type & initialMockCategories
 
 const LOCAL_STORAGE_LINKS_KEY = 'linkHubLinks';
 const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
@@ -21,11 +21,11 @@ export interface LinkItem {
   url: string;
   description?: string;
   categoryId: string;
-  categoryName?: string; // Optional, can be derived
+  categoryName?: string; 
   createdDate: string;
-  imageUrl?: string; // For frontend display ToolCard image
-  aiHint?: string; // For frontend display ToolCard image hint
-  faviconUrl?: string; // For link's favicon
+  imageUrl?: string; 
+  aiHint?: string; 
+  faviconUrl?: string; 
 }
 
 
@@ -43,8 +43,18 @@ export default function CreateLinkPage() {
   useEffect(() => {
     const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
     if (storedCategories) {
-      setAvailableCategories(JSON.parse(storedCategories));
+      try {
+        setAvailableCategories(JSON.parse(storedCategories));
+      } catch (e) {
+        console.error("Failed to parse categories from localStorage for new link page:", e);
+        // Fallback or set empty if corrupted
+        setAvailableCategories(defaultCategories); 
+        localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(defaultCategories));
+      }
     } else {
+      // Initialize if not present
+      setAvailableCategories(defaultCategories);
+      localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(defaultCategories));
       setError('No categories available. Please create a category first.');
     }
   }, []);
@@ -89,7 +99,7 @@ export default function CreateLinkPage() {
       categoryId,
       categoryName: selectedCategory?.name || 'Unknown Category',
       createdDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-      imageUrl: `https://placehold.co/120x80.png`, // Default placeholder for ToolCard
+      imageUrl: `https://placehold.co/120x80.png`, 
       aiHint: title.toLowerCase().split(' ').slice(0,2).join(' ') || 'link icon',
     };
 
@@ -100,7 +110,7 @@ export default function CreateLinkPage() {
       localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedLinks));
 
       setIsLoading(false);
-      alert('Link created successfully!'); // Replace with toast
+      alert('Link created successfully!'); 
       router.push('/admin/links');
     } catch (e) {
       setError('Failed to save link. Please try again.');
@@ -134,7 +144,7 @@ export default function CreateLinkPage() {
               <Input
                 id="title"
                 type="text"
-                placeholder="e.g. Google"
+                placeholder="e.g. Google Search"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
@@ -146,7 +156,7 @@ export default function CreateLinkPage() {
               <Input
                 id="url"
                 type="url"
-                placeholder="e.g. https://google.com"
+                placeholder="e.g. https://www.google.com"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 required
@@ -157,7 +167,7 @@ export default function CreateLinkPage() {
               <Label htmlFor="description">Description (optional)</Label>
               <Textarea
                 id="description"
-                placeholder="e.g. Search engine"
+                placeholder="e.g. The world's most popular search engine."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="min-h-[100px]"
@@ -169,7 +179,7 @@ export default function CreateLinkPage() {
                 <Input
                   id="faviconUrl"
                   type="url"
-                  placeholder="e.g. https://google.com/favicon.ico"
+                  placeholder="e.g. https://www.google.com/favicon.ico"
                   value={faviconUrl}
                   onChange={(e) => setFaviconUrl(e.target.value)}
                   className="h-10 flex-grow"
