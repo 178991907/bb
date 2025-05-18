@@ -49,6 +49,51 @@ class CloudDatabaseStorage implements Storage {
     } catch (error) {
       console.error("Failed to initialize database client:", error);
       // Depending on requirements, you might want to throw the error or handle fallback
+      throw error;
+    }
+  }
+
+  async getData(key: string): Promise<any> {
+    try {
+      console.log(`Fetching data from cloud database for key: ${key}`);
+      const query = `
+        SELECT value FROM storage
+        WHERE key = $1;
+      `;
+      const result = await this.client.query(query, [key]);
+
+      if (result.rows.length > 0) {
+        // Assuming the 'value' column stores JSONB data
+        return result.rows[0].value;
+      } else {
+        return null; // Data not found for the given key
+      }
+    } catch (error) {
+      console.error(`Error fetching data from cloud database for key: ${key}`, error);
+      throw error; // Rethrow the error to be handled by calling code
+    }
+  }
+
+class CloudDatabaseStorage implements Storage {
+ private client: ClientBase; // Use ClientBase for potential transaction support, or Client if not needed
+
+  constructor(dbUrl: string) {
+    console.log("Using cloud database mode");
+    // Initialize your cloud database connection here
+    try {
+      this.client = new Client({
+ connectionString: dbUrl,
+        // Add SSL options if needed, e.g., for Neon
+        ssl: {
+          rejectUnauthorized: false, // Adjust based on your database provider's SSL requirements
+        },
+      });
+      this.client.connect()
+        .then(() => console.log("Cloud database connected successfully!"))
+        .catch(err => console.error("Cloud database connection error:", err));
+    } catch (error) {
+      console.error("Failed to initialize database client:", error);
+      // Depending on requirements, you might want to throw the error or handle fallback
       throw error; 
 }
   }
