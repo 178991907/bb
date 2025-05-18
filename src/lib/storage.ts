@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { Client, ClientBase } from 'pg';
 
 dotenv.config(); // Load environment variables
 
@@ -29,24 +30,45 @@ class LocalStorage implements Storage {
 
 // Cloud Database Storage implementation (example)
 class CloudDatabaseStorage implements Storage {
-  private dbUrl: string;
+ private client: ClientBase; // Use ClientBase for potential transaction support, or Client if not needed
 
   constructor(dbUrl: string) {
-    this.dbUrl = dbUrl;
     console.log("Using cloud database mode");
     // Initialize your cloud database connection here
-  }
-
-  async getData(key: string): Promise<any> {
-    // Fetch data from the cloud database
-    console.log(`Fetching data from cloud database, API Key: ${this.apiKey}`);
-    return null; // Replace with actual data fetching logic
+    try {
+      this.client = new Client({
+ connectionString: dbUrl,
+        // Add SSL options if needed, e.g., for Neon
+        ssl: {
+          rejectUnauthorized: false, // Adjust based on your database provider's SSL requirements
+        },
+      });
+      this.client.connect()
+        .then(() => console.log("Cloud database connected successfully!"))
+        .catch(err => console.error("Cloud database connection error:", err));
+    } catch (error) {
+      console.error("Failed to initialize database client:", error);
+      // Depending on requirements, you might want to throw the error or handle fallback
+      throw error; 
+}
   }
 
   async saveData(key: string, data: any): Promise<void> {
-    // Save data to the cloud database
-    console.log(`Saving data to cloud database, API Key: ${this.apiKey}`);
-    // Replace with actual data saving logic
+ try {
+      // Example: Upsert (Insert or Update) data into a simple 'storage' table
+      // You'll need to create this table in your database: CREATE TABLE storage (key VARCHAR(255) PRIMARY KEY, value JSONB);
+      const query = `
+        INSERT INTO storage (key, value)
+        VALUES ($1, $2)
+        ON CONFLICT (key) DO UPDATE
+        SET value = EXCLUDED.value;
+      `;
+      await this.client.query(query, [key, data]);
+      console.log(`Data saved to cloud database for key: ${key}`);
+    } catch (error) {
+      console.error(`Error saving data to cloud database for key: ${key}`, error);
+      throw error; // Rethrow the error to be handled by calling code
+    }
   }
 }
 
