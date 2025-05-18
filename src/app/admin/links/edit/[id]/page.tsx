@@ -11,10 +11,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
 import type { LinkItem } from '../new/page'; 
-import type { Category, initialMockCategories as defaultCategories } from '@/app/admin/categories/page'; 
+import type { Category } from '@/app/admin/categories/page';
 
 const LOCAL_STORAGE_LINKS_KEY = 'linkHubLinks';
 const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
+
+const initialMockCategories: Category[] = [
+  { id: '1', name: '常用工具', slug: 'common-tools', createdDate: 'May 16, 2024', icon: 'tool' },
+  { id: '2', name: '儿童游戏', slug: 'kids-games', createdDate: 'May 16, 2024', icon: 'gamepad-2' },
+];
 
 export default function EditLinkPage() {
   const router = useRouter();
@@ -36,14 +41,14 @@ export default function EditLinkPage() {
   const [isFetching, setIsFetching] = useState(true);
 
   useEffect(() => {
-    let parsedCategories: Category[] = defaultCategories;
+    let parsedCategories: Category[] = initialMockCategories;
     const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
     if (storedCategories) {
       try {
         parsedCategories = JSON.parse(storedCategories);
       } catch (e) {
         console.error("Failed to parse categories from localStorage on edit link page:", e);
-        // Fallback or set empty if corrupted
+        // If categories are corrupted, reset them in localStorage
         localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(defaultCategories));
       }
     } else {
