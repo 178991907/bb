@@ -35,6 +35,7 @@ class CloudDatabaseStorage implements Storage {
   constructor(dbUrl: string) {
     console.log("Using cloud database mode");
     // Initialize your cloud database connection here
+ console.log('Connecting with connectionString:', dbUrl);
     console.log('Attempting to connect to database with URL:', dbUrl);
     try {
       this.client = new Client({
@@ -94,17 +95,19 @@ class CloudDatabaseStorage implements Storage {
 
 // Function to get the appropriate storage instance
 export function getStorage(): Storage {
-  const databaseUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
- console.log('Attempting to initialize CloudDatabaseStorage...');
+}
+
+// Function to get the appropriate storage instance with optional database URL
+export function getStorage(databaseUrl?: string): Storage {
+  console.log('Attempting to get storage instance...');
   try {
-    if (!databaseUrl) {
-      throw new Error('NEXT_PUBLIC_DATABASE_URL is not set.');
+    if (databaseUrl) {
+      console.log('Using provided database URL.');
+      const storage = new CloudDatabaseStorage(databaseUrl);
+      console.log('CloudDatabaseStorage initialized successfully.');
+      return storage;
     }
-    const storage = new CloudDatabaseStorage(databaseUrl);
-    console.log('CloudDatabaseStorage initialized successfully.');
-    return storage;
-  } catch (error) {
-    console.error('Failed to initialize CloudDatabaseStorage:', error);
-    throw error; // Rethrow the error to indicate that cloud database initialization failed
+ console.log('No database URL provided, using local storage.');
+ return new LocalStorage(); // Fallback to local storage
   }
 }
