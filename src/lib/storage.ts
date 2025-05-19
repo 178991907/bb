@@ -35,6 +35,7 @@ class CloudDatabaseStorage implements Storage {
   constructor(dbUrl: string) {
     console.log("Using cloud database mode");
     // Initialize your cloud database connection here
+    console.log('Attempting to connect to database with URL:', dbUrl);
     try {
       this.client = new Client({
  connectionString: dbUrl,
@@ -43,8 +44,8 @@ class CloudDatabaseStorage implements Storage {
           rejectUnauthorized: false, // Adjust based on your database provider's SSL requirements
         },
       });
-      this.client.connect()
-        .then(() => console.log("Cloud database connected successfully!"))
+ this.client.connect()
+ .then(() => console.log("Cloud database connected successfully!"))
         .catch(err => console.error("Cloud database connection error:", err));
     } catch (error) {
       console.error("Failed to initialize database client:", error);
@@ -52,11 +53,9 @@ class CloudDatabaseStorage implements Storage {
       throw error;
     }
   }
-
-  async getData(key: string): Promise<any> {
-    try {
-      console.log(`Fetching data from cloud database for key: ${key}`);
-      const query = `
+  async getData(key: string): Promise<any> {try {console.log(`Fetching data from cloud database for key: ${key}`);
+ console.log(`Attempting to get data for key: ${key}`);
+ const query = `
         SELECT value FROM storage
         WHERE key = $1;
       `;
@@ -73,33 +72,9 @@ class CloudDatabaseStorage implements Storage {
       throw error; // Rethrow the error to be handled by calling code
     }
   }
-
-class CloudDatabaseStorage implements Storage {
- private client: ClientBase; // Use ClientBase for potential transaction support, or Client if not needed
-
-  constructor(dbUrl: string) {
-    console.log("Using cloud database mode");
-    // Initialize your cloud database connection here
-    try {
-      this.client = new Client({
- connectionString: dbUrl,
-        // Add SSL options if needed, e.g., for Neon
-        ssl: {
-          rejectUnauthorized: false, // Adjust based on your database provider's SSL requirements
-        },
-      });
-      this.client.connect()
-        .then(() => console.log("Cloud database connected successfully!"))
-        .catch(err => console.error("Cloud database connection error:", err));
-    } catch (error) {
-      console.error("Failed to initialize database client:", error);
-      // Depending on requirements, you might want to throw the error or handle fallback
-      throw error; 
-}
-  }
-
   async saveData(key: string, data: any): Promise<void> {
  try {
+ console.log(`Attempting to save data for key: ${key}`);
       // Example: Upsert (Insert or Update) data into a simple 'storage' table
       // You'll need to create this table in your database: CREATE TABLE storage (key VARCHAR(255) PRIMARY KEY, value JSONB);
       const query = `
@@ -120,17 +95,16 @@ class CloudDatabaseStorage implements Storage {
 // Function to get the appropriate storage instance
 export function getStorage(): Storage {
   const databaseUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
-
-  if (databaseUrl) {
-    try {
-      const storage = new CloudDatabaseStorage(databaseUrl);
-      return storage;
-    } catch (error) {
-      console.error('Failed to connect to cloud database:', error);
-      // Rethrow the error to indicate that cloud database connection failed
-      throw error;
+ console.log('Attempting to initialize CloudDatabaseStorage...');
+  try {
+    if (!databaseUrl) {
+      throw new Error('NEXT_PUBLIC_DATABASE_URL is not set.');
     }
-  } else {
-    return new LocalStorage();
+    const storage = new CloudDatabaseStorage(databaseUrl);
+    console.log('CloudDatabaseStorage initialized successfully.');
+    return storage;
+  } catch (error) {
+    console.error('Failed to initialize CloudDatabaseStorage:', error);
+    throw error; // Rethrow the error to indicate that cloud database initialization failed
   }
 }
