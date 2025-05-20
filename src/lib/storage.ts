@@ -1,7 +1,8 @@
-import dotenv from 'dotenv';
-import { Client, ClientBase } from 'pg';
 
-dotenv.config(); // Load environment variables
+import dotenv from 'dotenv';
+import { Client, type ClientBase } from 'pg'; // Corrected import for ClientBase if needed, or just Client
+
+dotenv.config(); // Load environment variables at the top
 
 // Define the Storage interface
 interface Storage {
@@ -10,13 +11,13 @@ interface Storage {
   // Add other data operation methods as needed
 }
 
-// Local Storage implementation (example)
+// Local Storage implementation (in-memory map for server-side fallback)
 class LocalStorage implements Storage {
   private data: Map<string, any>;
 
   constructor() {
     this.data = new Map();
-    console.log("Using local storage mode");
+    console.log("Storage System: Using local (in-memory map) storage mode.");
   }
 
   async getData(key: string): Promise<any> {
@@ -28,56 +29,49 @@ class LocalStorage implements Storage {
   }
 }
 
-// Cloud Database Storage implementation (example)
+// Cloud Database Storage implementation (currently PostgreSQL specific)
 class CloudDatabaseStorage implements Storage {
- private client: ClientBase; // Use ClientBase for potential transaction support, or Client if not needed
+  private client: Client; 
 
-  constructor(dbUrl: string) {
-    console.log("Using cloud database mode");
-    // Initialize your cloud database connection here
- console.log('Connecting with connectionString:', dbUrl);
-    console.log('Attempting to connect to database with URL:', dbUrl);
-    try {
-      this.client = new Client({
- connectionString: dbUrl,
-        // Add SSL options if needed, e.g., for Neon
-        ssl: {
-          rejectUnauthorized: false, // Adjust based on your database provider's SSL requirements
-        },
-      });
- this.client.connect()
- .then(() => console.log("Cloud database connected successfully!"))
-        .catch(err => console.error("Cloud database connection error:", err));
-    } catch (error) {
-      console.error("Failed to initialize database client:", error);
-      // Depending on requirements, you might want to throw the error or handle fallback
-      throw error;
-    }
+  constructor(dbUrl: string, dbType: string) {
+    console.log(`Storage System: Using cloud database mode (${dbType}) with URL (connection string starts with): ${dbUrl.substring(0, dbUrl.indexOf(':') + 4)}...`);
+    
+    this.client = new Client({
+      connectionString: dbUrl,
+      ssl: {
+        rejectUnauthorized: false, // Adjust based on your database provider's SSL requirements
+      },
+      connectionTimeoutMillis: 5000,
+    });
+
+    this.client.connect()
+      .then(() => console.log(`Cloud database (${dbType}) connected successfully!`))
+      .catch(err => console.error(`Cloud database (${dbType}) connection error during initial connect:`, err.message, err.stack));
   }
-  async getData(key: string): Promise<any> {try {console.log(`Fetching data from cloud database for key: ${key}`);
- console.log(`Attempting to get data for key: ${key}`);
- const query = `
+
+  async getData(key: string): Promise<any> {
+    try {
+      // console.log(`Attempting to get data from cloud database for key: ${key}`);
+      const query = `
         SELECT value FROM storage
         WHERE key = $1;
       `;
       const result = await this.client.query(query, [key]);
 
       if (result.rows.length > 0) {
-        // Assuming the 'value' column stores JSONB data
         return result.rows[0].value;
       } else {
-        return null; // Data not found for the given key
+        return null; 
       }
-    } catch (error) {
-      console.error(`Error fetching data from cloud database for key: ${key}`, error);
-      throw error; // Rethrow the error to be handled by calling code
+    } catch (error: any) {
+      console.error(`Error fetching data from cloud database for key: ${key}`, error.message, error.stack);
+      throw error; 
     }
   }
+
   async saveData(key: string, data: any): Promise<void> {
- try {
- console.log(`Attempting to save data for key: ${key}`);
-      // Example: Upsert (Insert or Update) data into a simple 'storage' table
-      // You'll need to create this table in your database: CREATE TABLE storage (key VARCHAR(255) PRIMARY KEY, value JSONB);
+    try {
+      // console.log(`Attempting to save data to cloud database for key: ${key}`);
       const query = `
         INSERT INTO storage (key, value)
         VALUES ($1, $2)
@@ -85,29 +79,77 @@ class CloudDatabaseStorage implements Storage {
         SET value = EXCLUDED.value;
       `;
       await this.client.query(query, [key, data]);
-      console.log(`Data saved to cloud database for key: ${key}`);
-    } catch (error) {
-      console.error(`Error saving data to cloud database for key: ${key}`, error);
-      throw error; // Rethrow the error to be handled by calling code
+      // console.log(`Data saved to cloud database for key: ${key}`);
+    } catch (error: any) {
+      console.error(`Error saving data to cloud database for key: ${key}`, error.message, error.stack);
+      throw error;
+    }
+  }
+
+  // It's good practice to have a disconnect method
+  async disconnect(): Promise<void> {
+    if (this.client) {
+      try {
+        await this.client.end();
+        console.log("Cloud database client disconnected.");
+      } catch(closeError: any) {
+        console.error("Error closing database connection:", closeError.message);
+      }
     }
   }
 }
+
+// Singleton instance of storage
+let storageInstance: Storage | null = null;
 
 // Function to get the appropriate storage instance
 export function getStorage(): Storage {
-}
-
-// Function to get the appropriate storage instance with optional database URL
-export function getStorage(databaseUrl?: string): Storage {
-  console.log('Attempting to get storage instance...');
-  try {
-    if (databaseUrl) {
-      console.log('Using provided database URL.');
-      const storage = new CloudDatabaseStorage(databaseUrl);
-      console.log('CloudDatabaseStorage initialized successfully.');
-      return storage;
-    }
- console.log('No database URL provided, using local storage.');
- return new LocalStorage(); // Fallback to local storage
+  if (storageInstance) {
+    return storageInstance;
   }
+
+  console.log('Storage System: Initializing storage instance...');
+
+  const pgUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
+  const mysqlUrl = process.env.NEXT_PUBLIC_MYSQL_URL;
+  const mongoUrl = process.env.NEXT_PUBLIC_MONGODB_URL;
+
+  if (pgUrl) {
+    console.log("Storage System: PostgreSQL URL (NEXT_PUBLIC_DATABASE_URL) found.");
+    try {
+      storageInstance = new CloudDatabaseStorage(pgUrl, "PostgreSQL");
+      console.log("Storage System: CloudDatabaseStorage (PostgreSQL) initialized.");
+      return storageInstance;
+    } catch (error: any) {
+      console.error("Storage System: Failed to initialize PostgreSQL storage. Falling back.", error.message);
+    }
+  }
+  
+  if (mysqlUrl) {
+    console.log("Storage System: MySQL URL (NEXT_PUBLIC_MYSQL_URL) found, but MySQL is not yet implemented. Falling back.");
+    // If MySQL implementation was ready:
+    // try {
+    //   storageInstance = new MySqlStorage(mysqlUrl); // Assuming MySqlStorage class exists
+    //   console.log("Storage System: MySqlStorage initialized.");
+    //   return storageInstance;
+    // } catch (error: any) {
+    //   console.error("Storage System: Failed to initialize MySQL storage. Falling back.", error.message);
+    // }
+  }
+
+  if (mongoUrl) {
+    console.log("Storage System: MongoDB URL (NEXT_PUBLIC_MONGODB_URL) found, but MongoDB is not yet implemented. Falling back.");
+    // If MongoDB implementation was ready:
+    // try {
+    //   storageInstance = new MongoDbStorage(mongoUrl); // Assuming MongoDbStorage class exists
+    //   console.log("Storage System: MongoDbStorage initialized.");
+    //   return storageInstance;
+    // } catch (error: any) {
+    //   console.error("Storage System: Failed to initialize MongoDB storage. Falling back.", error.message);
+    // }
+  }
+
+  console.log("Storage System: No supported cloud database URL configured or implementation missing. Using local (in-memory map) storage as fallback.");
+  storageInstance = new LocalStorage();
+  return storageInstance;
 }
