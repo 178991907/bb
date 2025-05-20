@@ -42,47 +42,6 @@ export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    let loadedCategories: Category[] = initialMockCategories;
-    const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
-    if (storedCategories) {
-      try {
-        loadedCategories = JSON.parse(storedCategories);
-      } catch (e) {
-        console.error("Failed to parse categories from localStorage on homepage:", e);
-        localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(initialMockCategories));
-      }
-    } else {
-        localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(initialMockCategories));
-    }
-    setCategories(loadedCategories);
-
-    let loadedLinks: LinkItem[] = initialMockLinks;
-    const storedLinks = localStorage.getItem(LOCAL_STORAGE_LINKS_KEY);
-    if (storedLinks) {
-      try {
-        const parsedLinks: LinkItem[] = JSON.parse(storedLinks);
-        loadedLinks = parsedLinks.map((link: LinkItem) => ({
-          ...link,
-          categoryName: loadedCategories.find((cat: Category) => cat.id === link.categoryId)?.name || link.categoryName || 'Unknown Category',
-        }));
-      } catch (e) {
-        console.error("Failed to parse links from localStorage on homepage:", e);
-        // Fallback and reset if parsing fails
-        loadedLinks = initialMockLinks.map((link: LinkItem) => ({
-          ...link,
-          categoryName: loadedCategories.find((cat: Category) => cat.id === link.categoryId)?.name || link.categoryName || 'Unknown Category',
-        }));
-        localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(loadedLinks));
-      }
-    } else {
-        loadedLinks = initialMockLinks.map((link: LinkItem) => ({
-          ...link,
-          categoryName: loadedCategories.find((cat: Category) => cat.id === link.categoryId)?.name || link.categoryName || 'Unknown Category',
-        }));
-        localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(loadedLinks));
-    }
-    setLinks(loadedLinks);
-
     setIsLoading(false);
   }, []);
 
