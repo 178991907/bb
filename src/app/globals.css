@@ -104,7 +104,8 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+    /* font-family directly using var(--font-geist-sans) is removed
+       as Tailwind's font-sans utility will now handle it */
   }
 }
 
