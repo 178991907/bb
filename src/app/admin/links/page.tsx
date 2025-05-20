@@ -49,12 +49,10 @@ export default function AdminLinksPage() {
       try {
         parsedCategories = JSON.parse(storedCategories);
       } catch (e) {
-        console.error("Failed to parse categories from localStorage for links page:", e);
-        // If categories are corrupted, reset them in localStorage
+        console.error("解析localStorage中的categories数据失败 (links page):", e);
         localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(initialMockCategories));
       }
     } else {
-       // Initialize categories in localStorage if not present
        localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(initialMockCategories));
     }
     const catMap = new Map(parsedCategories.map(cat => [cat.id, cat.name]));
@@ -64,27 +62,24 @@ export default function AdminLinksPage() {
     if (storedLinks) {
       try {
         const parsedLinksList: LinkItem[] = JSON.parse(storedLinks);
-        // Ensure categoryName is updated based on the latest categoriesMap
         const updatedLinks = parsedLinksList.map(link => ({
           ...link,
-          categoryName: catMap.get(link.categoryId) || 'Unknown Category',
+          categoryName: catMap.get(link.categoryId) || '未知分类',
         }));
         setLinks(updatedLinks);
       } catch (e) {
-         console.error("Failed to parse links from localStorage:", e);
-         // Fallback: use initial mock links, update category names, and reset them in localStorage
+         console.error("解析localStorage中的links数据失败:", e);
          const updatedInitialLinks = initialMockLinks.map(link => ({
           ...link,
-          categoryName: catMap.get(link.categoryId) || link.categoryName || 'Unknown Category',
+          categoryName: catMap.get(link.categoryId) || link.categoryName || '未知分类',
         }));
         setLinks(updatedInitialLinks);
         localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedInitialLinks));
       }
     } else {
-      // Initialize links in localStorage if not present
       const updatedInitialLinks = initialMockLinks.map(link => ({
         ...link,
-        categoryName: catMap.get(link.categoryId) || link.categoryName || 'Unknown Category',
+        categoryName: catMap.get(link.categoryId) || link.categoryName || '未知分类',
       }));
       setLinks(updatedInitialLinks);
       localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedInitialLinks));
@@ -97,38 +92,51 @@ export default function AdminLinksPage() {
   };
 
   const handleDelete = (linkId: string) => {
-    // Find the link based on the current state to get its title for user messages.
-    // This is generally safe as it's for display; the actual filter will use the guaranteed latest state.
-    const linkToDelete = links.find(link => link.id === linkId);
-
-    if (!linkToDelete) {
+    if (!linkId) {
       toast({
-        title: "Error",
-        description: "Link not found for deletion. The list might have been updated by another action.",
+        title: "删除错误",
+        description: "无法删除链接：链接ID缺失。",
         variant: "destructive",
       });
       return;
     }
 
-    if (window.confirm(`Are you sure you want to delete the link "${linkToDelete.title}"? This action cannot be undone.`)) {
-      // Use functional update for setLinks to ensure we operate on the latest state
-      setLinks(prevLinks => {
-        const updatedLinks = prevLinks.filter(link => link.id !== linkId);
-        // Persist the change to localStorage based on this truly updated list
-        localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedLinks));
-        return updatedLinks; // Return the new state for React to re-render
-      });
+    const linkToDelete = links.find(link => link.id === linkId);
 
-      // Show success toast. linkToDelete.title is from the `links` state at the time of the click.
+    if (!linkToDelete) {
       toast({
-        title: "Link Deleted",
-        description: `The link "${linkToDelete.title}" has been successfully deleted.`,
+        title: "错误",
+        description: "未找到要删除的链接。列表可能已被其他操作更新或ID不正确。",
+        variant: "destructive",
       });
+      return;
+    }
+
+    if (window.confirm(`您确定要删除链接 "${linkToDelete.title}" 吗？此操作无法撤销。`)) {
+      try {
+        setLinks(prevLinks => {
+          const updatedLinks = prevLinks.filter(link => link.id !== linkId);
+          localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedLinks));
+          return updatedLinks;
+        });
+
+        toast({
+          title: "链接已删除",
+          description: `链接 "${linkToDelete.title}" 已成功删除。`,
+        });
+      } catch (error) {
+        console.error('删除链接过程中发生错误:', error);
+        toast({
+          title: "删除失败",
+          description: "尝试删除链接时发生错误。",
+          variant: "destructive",
+        });
+      }
     }
   };
   
   if (isLoading) {
-    return <div>Loading links...</div>;
+    return <div>正在加载链接...</div>;
   }
 
   return (
@@ -137,24 +145,24 @@ export default function AdminLinksPage() {
         <h1 className="text-3xl font-bold text-primary">Links</h1>
         <Button asChild className="bg-green-600 hover:bg-green-700 text-white">
           <Link href="/admin/links/new">
-            <Plus className="mr-2 h-4 w-4" /> Add Link
+            <Plus className="mr-2 h-4 w-4" /> 添加链接
           </Link>
         </Button>
       </div>
       <Card className="shadow-md">
         <CardHeader>
-          <CardTitle>Existing Links</CardTitle>
-          <CardDescription>View, edit, or delete your links.</CardDescription>
+          <CardTitle>现有链接</CardTitle>
+          <CardDescription>查看、编辑或删除您的链接。</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Title</TableHead>
+                <TableHead>标题</TableHead>
                 <TableHead>URL</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>分类</TableHead>
+                <TableHead>创建日期</TableHead>
+                <TableHead className="text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -179,7 +187,7 @@ export default function AdminLinksPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleEdit(link.id)}
-                      aria-label="Edit link"
+                      aria-label="编辑链接"
                       className="mr-2 hover:text-blue-600"
                     >
                       <Pencil className="h-4 w-4" />
@@ -188,7 +196,7 @@ export default function AdminLinksPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(link.id)}
-                      aria-label="Delete link"
+                      aria-label="删除链接"
                       className="hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -199,7 +207,7 @@ export default function AdminLinksPage() {
             </TableBody>
           </Table>
           {links.length === 0 && (
-            <p className="text-center text-muted-foreground py-4">No links found. Add one to get started!</p>
+            <p className="text-center text-muted-foreground py-4">未找到任何链接。添加一个开始吧！</p>
           )}
         </CardContent>
       </Card>
