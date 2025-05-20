@@ -45,7 +45,23 @@ class CloudDatabaseStorage implements Storage {
     });
 
     this.client.connect()
-      .then(() => console.log(`Cloud database (${dbType}) connected successfully!`))
+      .then(async () => { // Make the callback async
+        console.log(`Cloud database (${dbType}) connected successfully!`);
+        try {
+          const createTableQuery = `
+            CREATE TABLE IF NOT EXISTS storage (
+              key VARCHAR(255) PRIMARY KEY,
+              value JSONB
+            );
+          `;
+          await this.client.query(createTableQuery);
+          console.log(`Storage System: Table "storage" ensured/created successfully in ${dbType}.`);
+        } catch (tableError: any) {
+          console.error(`Storage System: Error ensuring/creating "storage" table in ${dbType}:`, tableError.message, tableError.stack);
+          // Depending on requirements, you might want to handle this error more gracefully
+          // or even throw it to prevent the application from starting if the table is critical.
+        }
+      })
       .catch(err => console.error(`Cloud database (${dbType}) connection error during initial connect:`, err.message, err.stack));
   }
 
