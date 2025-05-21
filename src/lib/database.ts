@@ -149,12 +149,13 @@ export async function createLink(linkData: Omit<LinkItem, 'id' | 'createdDate'>)
             title: linkToInsert.title,
             url: linkToInsert.url,
             description: linkToInsert.description,
-                linkToInsert.categoryId,
-                linkToInsert.createdDate,
-                linkToInsert.imageUrl,
-                linkToInsert.aiHint,
-                linkToInsert.faviconUrl,
-            ]
+            categoryId: linkToInsert.categoryId,
+            createdDate: linkToInsert.createdDate,
+            imageUrl: linkToInsert.imageUrl,
+            aiHint: linkToInsert.aiHint,
+            faviconUrl: linkToInsert.faviconUrl,
+            // Assuming categoryId, createdDate, imageUrl, aiHint, faviconUrl are also properties of linkToInsert
+            // If they are part of the linkData object, they should be included here.
         );
         }).returning('*'); // Use returning('*') with Knex to get the inserted row
 
