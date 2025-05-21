@@ -11,7 +11,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
 import type { Category, initialMockCategories as defaultCategories } from '@/app/admin/categories/page'; // Import Category type & initialMockCategories
-import { createLinkAction } from './actions'; // Import createLinkAction server action
 import { createLinkAction } from '../actions'; // Import createLinkAction server action
 const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
 
