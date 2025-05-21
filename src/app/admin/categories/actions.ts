@@ -1,6 +1,7 @@
 'use server';
 
 import { getPool } from '@/lib/database';
+import { v4 as uuidv4 } from 'uuid';
 import { Pool } from 'pg';
 
 
@@ -45,7 +46,7 @@ export async function createCategoryAction(categoryData: Omit<Category, 'id' | '
 
   try {
     // Generate a new UUID for the category ID
-    const newCategoryId = require('uuid').v4();
+    const newCategoryId = uuidv4();
     const now = new Date();
 
     const result = await client.query(
