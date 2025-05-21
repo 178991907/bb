@@ -125,11 +125,9 @@ export async function getLinks(): Promise<LinkItem[]> {
     throw new Error('Database not connected.');
   }
   try {
-    const links = await db('links')
-      'SELECT l.id, l.title, l.url, l.categoryId, c.name AS "categoryName", l."createdDate", l."imageUrl", l."aiHint", l.description, l."faviconUrl" FROM links l JOIN categories c ON l.categoryId = c.id'
-    );
+    const result = await db.raw('SELECT l.id, l.title, l.url, l.categoryId, c.name AS "categoryName", l."createdDate", l."imageUrl", l."aiHint", l.description, l."faviconUrl" FROM links l JOIN categories c ON l.categoryId = c.id');
     return result.rows;
-  } catch (error) {
+  } catch (error: any) { // Added type annotation for error
     console.error('Error fetching links:', error);
     throw error;
   }
