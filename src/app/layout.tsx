@@ -21,6 +21,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/favicon.ico" />
+      </head>
       <body className={`font-sans antialiased`}>
         <ThemeProvider
           attribute="class"

@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
 import type { Category, initialMockCategories as defaultCategories } from '@/app/admin/categories/page'; // Import Category type & initialMockCategories
-
+import { createLinkAction } from './actions'; // Import createLinkAction server action
 const LOCAL_STORAGE_LINKS_KEY = 'linkHubLinks';
 const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
 
@@ -104,18 +104,31 @@ export default function CreateLinkPage() {
     };
 
     try {
-      const storedLinks = localStorage.getItem(LOCAL_STORAGE_LINKS_KEY);
-      const currentLinks: LinkItem[] = storedLinks ? JSON.parse(storedLinks) : [];
-      const updatedLinks = [...currentLinks, newLink];
-      localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedLinks));
+      if (process.env.NEXT_PUBLIC_DATABASE_URL) {
+        // Save to database
+        console.log('Saving link to database...');
+        const result = await createLinkAction(newLink);
+        if (result.success) {
+          console.log('Link saved to database:', result.linkId);
+          alert('Link created successfully!');
+        } else {
+          throw new Error(result.message);
+        }
+      } else {
+        // Save to localStorage as fallback
+        console.log('Saving link to localStorage...');
+        const storedLinks = localStorage.getItem(LOCAL_STORAGE_LINKS_KEY);
+        const currentLinks: LinkItem[] = storedLinks ? JSON.parse(storedLinks) : [];
+        const updatedLinks = [...currentLinks, newLink];
+        localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedLinks));
+        console.log('Link saved to localStorage.');
+      }
 
-      setIsLoading(false);
-      alert('Link created successfully!'); 
       router.push('/admin/links');
     } catch (e) {
       setError('Failed to save link. Please try again.');
       setIsLoading(false);
-      console.error("Failed to save link to localStorage", e);
+      console.error("Failed to save link", e);
     }
   };
 
