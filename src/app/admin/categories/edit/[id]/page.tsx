@@ -28,30 +28,33 @@ export default function EditCategoryPage() {
   const [isFetching, setIsFetching] = useState(true);
 
   useEffect(() => {
+ fetchCategory();
+
+    async function fetchCategory() {
     const fetchCategory = async () => {
       setIsFetching(true);
       setError('');
+      let categories: Category[] = [];
       try {
-        let fetchedCategories: Category[] = [];
         if (process.env.NEXT_PUBLIC_DATABASE_URL) {
           // Fetch from API
           const response = await fetch('/api/admin/categories');
           if (!response.ok) {
-            throw new Error('Failed to fetch categories from API');
+            throw new Error(`Failed to fetch categories from API: ${response.statusText}`);
           }
-          fetchedCategories = await response.json();
+ categories = await response.json();
         } else {
           // Fetch from localStorage
           const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
           if (storedCategories) { // Added check for null/undefined
-            categories = JSON.parse(storedCategories);
+ categories = JSON.parse(storedCategories) as Category[];
           } else {
  console.warn('No categories found in localStorage.');
           }
         }
 
-        setAllCategories(parsedCategories);
-        const categoryToEdit = fetchedCategories.find(cat => cat.id === categoryId);
+        setAllCategories(categories);
+        const categoryToEdit = categories.find(cat => cat.id === categoryId);
         if (categoryToEdit) {
           setName(categoryToEdit.name);
           setSlug(categoryToEdit.slug);

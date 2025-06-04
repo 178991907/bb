@@ -150,13 +150,13 @@ export async function createLink(linkData: Omit<LinkItem, 'id' | 'createdDate'>)
             description: linkToInsert.description,
             categoryId: linkToInsert.categoryId, // Add comma here
             createdDate: linkToInsert.createdDate, // Add comma here
-            imageUrl: linkToInsert.imageUrl, // Add comma here
-            aiHint: linkToInsert.aiHint, // Add comma here
+            imageUrl: linkToInsert.imageUrl,
+            aiHint: linkToInsert.aiHint,
             faviconUrl: linkToInsert.faviconUrl // Ensure this is the last property or has a comma if more follow
-        })
         }).returning('*'); // Use returning('*') with Knex to get the inserted row
 
         console.log('Link inserted successfully:', newLink.id);
+        // Ensure newLink is indeed an array and take the first element if returning('*') provides an array
         return newLink as LinkItem; // Type assertion
     } catch (error) {
         console.error('Error creating link:', error);
