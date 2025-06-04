@@ -1,4 +1,14 @@
-import knex from 'knex';
+git add .
+
+git commit -m Initial commit
+
+git commit -m "Initial commit"
+
+git status
+
+git remote -v
+
+git push origin mainimport knex from 'knex';
 import { v4 as uuidv4 } from 'uuid'; // Import uuid to generate IDs
 // Use a different variable name to avoid conflict with the imported Pool type
 let db: knex.Knex | null = null;
