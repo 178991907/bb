@@ -1,7 +1,5 @@
 'use server';
 
-import { getPool } from '@/lib/database';
-import { v4 as uuidv4 } from 'uuid';
 import { Pool } from 'pg';
 
 
@@ -18,13 +16,15 @@ export interface Category {
  * @returns A promise that resolves with an array of Category objects.
  */
 export async function getCategoriesAction(): Promise<Category[]> {
-  const pool = getPool();
-  const client = await pool.connect();
+  const db = await getDb();
 
+  if (!db) {
+    console.warn('Database not initialized. Cannot get categories.');
+    return []; // Return empty array if database is not connected
+  }
   try {
-    const result = await client.query<Category>('SELECT id, name, slug, icon, "createdDate" FROM categories');
-    // Assuming createdDate is stored as a TIMESTAMP and you want it as a string
-    return result.rows;
+    const categories = await db('categories').select('id', 'name', 'slug', 'icon', 'createdDate');
+    return categories as Category[]; // Type assertion
   } catch (error) {
     console.error('Error getting categories from database:', error);
     // Depending on your error handling strategy, you might want to throw the error
@@ -32,7 +32,6 @@ export async function getCategoriesAction(): Promise<Category[]> {
     return [];
   } finally {
     client.release();
-  }
 }
 
 /**

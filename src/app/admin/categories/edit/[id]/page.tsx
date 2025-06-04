@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
-import type { Category } from '@/app/admin/categories/page'; 
+import type { Category } from '@/app/admin/categories/page';
+import { updateCategoryAction } from '@/app/admin/categories/actions'; // Import update action
 
 const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
 
@@ -27,26 +28,37 @@ export default function EditCategoryPage() {
   const [isFetching, setIsFetching] = useState(true);
 
   useEffect(() => {
-    const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
-    if (storedCategories) {
+    const fetchCategory = async () => {
+      setIsFetching(true);
+      setError('');
       try {
-        const parsedCategories: Category[] = JSON.parse(storedCategories);
+        let fetchedCategories: Category[] = [];
+        if (process.env.NEXT_PUBLIC_DATABASE_URL) {
+          // Fetch from API
+          const response = await fetch('/api/admin/categories');
+          if (!response.ok) {
+            throw new Error('Failed to fetch categories from API');
+          }
+          fetchedCategories = await response.json();
+        } else {
+          // Fetch from localStorage
+          const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
+          if (storedCategories) { // Added check for null/undefined
+            categories = JSON.parse(storedCategories);
+          } else {
+ console.warn('No categories found in localStorage.');
+          }
+        }
+
         setAllCategories(parsedCategories);
-        const categoryToEdit = parsedCategories.find(cat => cat.id === categoryId);
+        const categoryToEdit = fetchedCategories.find(cat => cat.id === categoryId);
         if (categoryToEdit) {
           setName(categoryToEdit.name);
           setSlug(categoryToEdit.slug);
-          setOriginalSlug(categoryToEdit.slug); 
+          setOriginalSlug(categoryToEdit.slug);
           setIcon(categoryToEdit.icon || '');
         } else {
           setError('Category not found.');
-        }
-      } catch (e) {
-        console.error("Failed to parse categories from localStorage on edit page:", e);
-        setError('Failed to load category data. Data might be corrupted.');
-      }
-    } else {
-      setError('No categories found in storage.');
     }
     setIsFetching(false);
   }, [categoryId]); // Removed router from dependencies as it's not used in the effect for navigation logic here
@@ -92,19 +104,31 @@ export default function EditCategoryPage() {
       icon,
     };
 
+    const isDatabaseMode = process.env.NEXT_PUBLIC_DATABASE_URL;
+
     try {
-      const updatedCategoriesList = [...allCategories];
-      updatedCategoriesList[categoryToUpdateIndex] = updatedCategory;
-      localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(updatedCategoriesList));
-      setAllCategories(updatedCategoriesList);
+      if (isDatabaseMode) {
+        // Update in database via Server Action
+        const result = await updateCategoryAction(updatedCategory);
+        if (!result.success) {
+          throw new Error(result.message);
+        }
+        alert('Category updated successfully (Database)!');
+      } else {
+        // Update in localStorage
+        const updatedCategoriesList = [...allCategories];
+        updatedCategoriesList[categoryToUpdateIndex] = updatedCategory;
+        localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(updatedCategoriesList));
+        setAllCategories(updatedCategoriesList); // Update local state as well
+        alert('Category updated successfully (LocalStorage)!');
+      }
 
       setIsLoading(false);
-      alert('Category updated successfully!'); 
       router.push('/admin/categories');
     } catch (e) {
       setError('Failed to update category. Please try again.');
       setIsLoading(false);
-      console.error("Failed to update category in localStorage", e);
+      console.error("Failed to update category:", e);
     }
   };
 

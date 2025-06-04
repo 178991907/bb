@@ -1,5 +1,4 @@
 import knex from 'knex';
-
 import { v4 as uuidv4 } from 'uuid'; // Import uuid to generate IDs
 // Use a different variable name to avoid conflict with the imported Pool type
 let db: knex.Knex | null = null;
@@ -125,7 +124,7 @@ export async function getLinks(): Promise<LinkItem[]> {
     throw new Error('Database not connected.');
   }
   try {
-    const result = await db.raw('SELECT l.id, l.title, l.url, l.categoryId, c.name AS "categoryName", l."createdDate", l."imageUrl", l."aiHint", l.description, l."faviconUrl" FROM links l JOIN categories c ON l.categoryId = c.id');
+    const result = await db.raw('SELECT l.id, l.title, l.url, l.categoryId, c.name AS "categoryName", l."createdDate", l."imageUrl", l."aiHint", l.description, l."faviconUrl" FROM links l JOIN categories c ON l.categoryId = c.id;');
     return result.rows;
   } catch (error: any) { // Added type annotation for error
     console.error('Error fetching links:', error);
@@ -149,14 +148,12 @@ export async function createLink(linkData: Omit<LinkItem, 'id' | 'createdDate'>)
             title: linkToInsert.title,
             url: linkToInsert.url,
             description: linkToInsert.description,
-            categoryId: linkToInsert.categoryId,
-            createdDate: linkToInsert.createdDate,
-            imageUrl: linkToInsert.imageUrl,
-            aiHint: linkToInsert.aiHint,
-            faviconUrl: linkToInsert.faviconUrl,
-            // Assuming categoryId, createdDate, imageUrl, aiHint, faviconUrl are also properties of linkToInsert
-            // If they are part of the linkData object, they should be included here.
-        );
+            categoryId: linkToInsert.categoryId, // Add comma here
+            createdDate: linkToInsert.createdDate, // Add comma here
+            imageUrl: linkToInsert.imageUrl, // Add comma here
+            aiHint: linkToInsert.aiHint, // Add comma here
+            faviconUrl: linkToInsert.faviconUrl // Ensure this is the last property or has a comma if more follow
+        })
         }).returning('*'); // Use returning('*') with Knex to get the inserted row
 
         console.log('Link inserted successfully:', newLink.id);
@@ -165,6 +162,6 @@ export async function createLink(linkData: Omit<LinkItem, 'id' | 'createdDate'>)
         console.error('Error creating link:', error);
         throw error;
     } finally {
-        client.release();
+        // client.release(); // Removed client.release() as knex manages connections
     }
 }

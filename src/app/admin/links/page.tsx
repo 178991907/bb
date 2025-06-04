@@ -14,8 +14,8 @@ import {
 import { Plus, Pencil, Trash2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import type { LinkItem } from './new/page'; 
+import { getLinksAction } from '../links/actions';
 import type { Category } from '../categories/page'; 
 import { useToast } from "@/hooks/use-toast";
 
@@ -36,58 +36,90 @@ const initialMockCategories: Category[] = [
 
 
 export default function AdminLinksPage() {
-  const router = useRouter();
   const { toast } = useToast();
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [categoriesMap, setCategoriesMap] = useState<Map<string, string>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let parsedCategories: Category[] = initialMockCategories;
-    const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
-    if (storedCategories) {
-      try {
-        parsedCategories = JSON.parse(storedCategories);
-      } catch (e) {
-        console.error("解析localStorage中的categories数据失败 (links page):", e);
-        localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(initialMockCategories));
+    const fetchCategories = async () => {
+      // Fetch categories regardless of DB or localStorage mode
+      // This is needed to display category names for links in localStorage mode
+      const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
+      let parsedCategories: Category[] = initialMockCategories; // Default to mock
+      if (storedCategories) {
+        try {
+          parsedCategories = JSON.parse(storedCategories);
+        } catch (e) {
+          console.error("解析localStorage中的categories数据失败 (links page):", e);
+        }
       }
-    } else {
-       localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(initialMockCategories));
-    }
-    const catMap = new Map(parsedCategories.map(cat => [cat.id, cat.name]));
-    setCategoriesMap(catMap);
+      return new Map(parsedCategories.map(cat => [cat.id, cat.name]));
+    };
 
-    const storedLinks = localStorage.getItem(LOCAL_STORAGE_LINKS_KEY);
-    if (storedLinks) {
+    const fetchLinks = async () => {
       try {
-        const parsedLinksList: LinkItem[] = JSON.parse(storedLinks);
-        const updatedLinks = parsedLinksList.map(link => ({
-          ...link,
-          categoryName: catMap.get(link.categoryId) || '未知分类',
-        }));
-        setLinks(updatedLinks);
+        setIsLoading(true);
+        if (process.env.NEXT_PUBLIC_DATABASE_URL) {
+          // Fetch from database
+          const dbLinks = await getLinksAction();
+          // Assuming getLinksAction from DB already includes categoryName
+          setLinks(dbLinks);
+          // If categoriesMap is still needed (e.g., for category filter dropdown), fetch categories here too
+          // const categories = await fetch('/api/admin/categories').then(res => res.json());
+          // setCategoriesMap(new Map(categories.map(cat => [cat.id, cat.name])));
+        } else {
+          // Fetch from localStorage
+          const catMap = await fetchCategories();
+          setCategoriesMap(catMap); // Still set categoriesMap for localStorage case
+
+          const storedLinks = localStorage.getItem(LOCAL_STORAGE_LINKS_KEY);
+          if (storedLinks) {
+            try {
+              const parsedLinksList: LinkItem[] = JSON.parse(storedLinks);
+              const updatedLinks = parsedLinksList.map(link => ({
+                ...link,
+                categoryName: catMap.get(link.categoryId) || '未知分类',
+              }));
+              setLinks(updatedLinks);
+            } catch (e) {
+              console.error("解析localStorage中的links数据失败:", e);
+              // Fallback to initial mock data and reset localStorage
+              const updatedInitialLinks = initialMockLinks.map(link => ({
+               ...link,
+               categoryName: catMap.get(link.categoryId) || link.categoryName || '未知分类',
+             }));
+             setLinks(updatedInitialLinks);
+             localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedInitialLinks));
+            }
+          } else {
+            // Initialize with mock data if nothing is in localStorage
+            const updatedInitialLinks = initialMockLinks.map(link => ({
+              ...link,
+              categoryName: catMap.get(link.categoryId) || link.categoryName || '未知分类',
+            }));
+            setLinks(updatedInitialLinks);
+            localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedInitialLinks));
+          }
+        }
       } catch (e) {
-         console.error("解析localStorage中的links数据失败:", e);
-         const updatedInitialLinks = initialMockLinks.map(link => ({
-          ...link,
-          categoryName: catMap.get(link.categoryId) || link.categoryName || '未知分类',
-        }));
-        setLinks(updatedInitialLinks);
-        localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedInitialLinks));
+        console.error("Error fetching links:", e);
+        toast({
+          title: "加载链接失败",
+          description: "无法加载链接数据。",
+          variant: "destructive",
+        });
+        setLinks([]);
+        // If using DB and categoriesMap is needed, handle category fetch error here too
+      } finally {
+        setIsLoading(false);
       }
-    } else {
-      const updatedInitialLinks = initialMockLinks.map(link => ({
-        ...link,
-        categoryName: catMap.get(link.categoryId) || link.categoryName || '未知分类',
-      }));
-      setLinks(updatedInitialLinks);
-      localStorage.setItem(LOCAL_STORAGE_LINKS_KEY, JSON.stringify(updatedInitialLinks));
-    }
-    setIsLoading(false);
+    };
+
+    fetchLinks();
   }, []);
   
-  const handleEdit = (linkId: string) => {
+  const handleEdit = (linkId: string) => { // Added router import back if needed for push
     router.push(`/admin/links/edit/${linkId}`);
   };
 

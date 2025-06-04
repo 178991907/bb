@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
-import type { Category } from '@/app/admin/categories/page'; 
+import type { Category } from '@/app/admin/categories/page';
 
 const LOCAL_STORAGE_CATEGORIES_KEY = 'linkHubCategories';
 
@@ -28,7 +28,7 @@ export default function CreateCategoryPage() {
         setAllCategories(JSON.parse(storedCategories));
       } catch (e) {
         console.error("Failed to parse allCategories from localStorage:", e);
-        setAllCategories([]); 
+        setAllCategories([]);
       }
     }
   }, []);
@@ -60,22 +60,36 @@ export default function CreateCategoryPage() {
       return;
     }
 
-    const newCategory: Category = {
-      id: Date.now().toString(), 
-      name,
-      slug,
-      icon,
-      createdDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-    };
+    const isDatabaseConfigured = process.env.NEXT_PUBLIC_DATABASE_URL;
 
     try {
-      const updatedCategories = [...allCategories, newCategory];
-      localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(updatedCategories));
-      setAllCategories(updatedCategories); 
+      if (isDatabaseConfigured) {
+        // Call the server action to create the category in the database
+        // Need to import createCategoryAction
+        // const { success, message } = await createCategoryAction({ name, slug, icon });
+        // if (success) {
+        //   alert(message);
+        //   router.push('/admin/categories');
+        // } else {
+        //   setError(message);
+        // }
+        setError("Database creation is not yet fully implemented."); // Placeholder
+      } else {
+        // LocalStorage logic
+        const newCategory: Category = {
+          id: Date.now().toString(), // Simple unique ID for localStorage
+          name,
+          slug,
+          icon,
+          createdDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+        };
+        const updatedCategories = [...allCategories, newCategory];
+        localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(updatedCategories));
+        setAllCategories(updatedCategories);
 
-      setIsLoading(false);
-      alert('Category created successfully!'); 
-      router.push('/admin/categories');
+        alert('Category created successfully (localStorage)!');
+        router.push('/admin/categories');
+      }
     } catch (e) {
       setError('Failed to save category. Please try again.');
       setIsLoading(false);

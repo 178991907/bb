@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/table';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-
+import { getCategoriesAction } from '../categories/actions';
 export interface Category {
   id: string;
   name: string;
@@ -38,22 +38,39 @@ export default function AdminCategoriesPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
-    if (storedCategories) {
-      try {
-        setCategories(JSON.parse(storedCategories));
+    const fetchCategories = async () => {
+ try {
+ if (process.env.NEXT_PUBLIC_DATABASE_URL) {
+ // Fetch from database via API route
+ console.log('Fetching categories from database...');
+ const response = await fetch('/api/admin/categories');
+ if (!response.ok) {
+ throw new Error(`HTTP error! status: ${response.status}`);
+ }
+ const data: Category[] = await response.json();
+ setCategories(data);
+ } else {
+ // Fetch from localStorage
+ console.log('Fetching categories from localStorage...');
+ const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
+ if (storedCategories) {
+ const parsedCategories: Category[] = JSON.parse(storedCategories);
+ setCategories(parsedCategories);
+ } else {
+ // Initialize with mock data if nothing is in localStorage
+ setCategories(initialMockCategories);
+ localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(initialMockCategories));
+ }
+
+        }
+
       } catch (e) {
-        console.error("Failed to parse categories from localStorage:", e);
-        // Fallback to initial mock data and reset localStorage
-        setCategories(initialMockCategories);
-        localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(initialMockCategories));
+        console.error("Failed to fetch categories:", e);
+        // Optionally, set an error state or display an error message
       }
-    } else {
-      // Initialize with mock data if nothing is in localStorage
-      setCategories(initialMockCategories);
-      localStorage.setItem(LOCAL_STORAGE_CATEGORIES_KEY, JSON.stringify(initialMockCategories));
+      setIsLoading(false);
     }
-    setIsLoading(false);
+    fetchCategories();
   }, []);
 
   const handleEdit = (categoryId: string) => {
