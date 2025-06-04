@@ -28,9 +28,6 @@ export default function EditCategoryPage() {
   const [isFetching, setIsFetching] = useState(true);
 
   useEffect(() => {
- fetchCategory();
-
-    async function fetchCategory() {
     const fetchCategory = async () => {
       setIsFetching(true);
       setError('');
@@ -47,7 +44,7 @@ export default function EditCategoryPage() {
           // Fetch from localStorage
           const storedCategories = localStorage.getItem(LOCAL_STORAGE_CATEGORIES_KEY);
           if (storedCategories) { // Added check for null/undefined
- categories = JSON.parse(storedCategories) as Category[];
+            categories = JSON.parse(storedCategories) as Category[];
           } else {
  console.warn('No categories found in localStorage.');
           }
@@ -64,9 +61,11 @@ export default function EditCategoryPage() {
           setError('Category not found.');
     }
     setIsFetching(false);
+    };
+ fetchCategory();
   }, [categoryId]); // Removed router from dependencies as it's not used in the effect for navigation logic here
 
-  const generateSlug = (value: string) => {
+   const generateSlug = (value: string) => {
     return value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   };
 
